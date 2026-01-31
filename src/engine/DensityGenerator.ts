@@ -48,6 +48,10 @@ export class DensityGenerator {
 
   /**
    * Maybe add a ghost note to a rest step.
+   *
+   * At 100% density: guaranteed at least 1 ghost note every 4 steps
+   * At 50% density: at least 1 every 8 steps
+   * At 10% density: sparse coverage (1 every ~20 steps)
    */
   private static maybeAddGhostNote(
     step: Step,
@@ -55,15 +59,25 @@ export class DensityGenerator {
     random: () => number,
     stepIndex: number
   ): Step {
-    // Base probability scales with density
-    // At density 0.5: 40% chance, at density 1.0: 80% chance
-    const probability = density * 0.8;
+    // Calculate guaranteed period (how often we force a ghost note)
+    // At density 1.0: every 4 steps; at 0.5: every 8; at 0.1: every 40
+    const guaranteedPeriod = Math.max(2, Math.round(4 / density));
 
-    if (random() > probability) {
+    // Guaranteed ghost note at regular intervals
+    const isGuaranteedSlot = stepIndex % guaranteedPeriod === 0;
+
+    // Random probability for non-guaranteed slots
+    // At density 1.0: 60% extra chance; at 0.5: 30%; at 0.1: 6%
+    const randomProbability = density * 0.6;
+
+    // Decide whether to add ghost note
+    const shouldAdd = isGuaranteedSlot || random() < randomProbability;
+
+    if (!shouldAdd) {
       return step; // No change
     }
 
-    // Prefer hi-hat on offbeats (2, 6, 10, 14 in 16-step bar)
+    // Prefer hi-hat on offbeats (odd positions)
     const positionInBar = stepIndex % 16;
     const isOffbeat = positionInBar % 2 === 1;
 
@@ -91,12 +105,14 @@ export class DensityGenerator {
     random: () => number,
     _stepIndex: number
   ): Step {
-    // Only at high density (>0.6), and lower probability
-    if (density < 0.6) {
+    // Only at medium-high density (>0.4)
+    if (density < 0.4) {
       return step;
     }
 
-    const probability = (density - 0.6) * 0.5; // 0-20% at density 0.6-1.0
+    // Higher probability at high density
+    // At 0.4: 10%, at 0.7: 25%, at 1.0: 40%
+    const probability = (density - 0.4) * 0.67;
 
     if (random() > probability) {
       return step;

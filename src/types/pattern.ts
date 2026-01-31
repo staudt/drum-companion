@@ -1,7 +1,13 @@
-// Basic drum symbols
+// Drum symbols
 // k=kick, s=snare, h=hatClosed, H=hatOpen, c=crash, r=ride
 // t=midTom, T=hiTom, L=lowTom
-export type DrumSymbol = 'k' | 's' | 'h' | 'H' | 'c' | 'r' | 't' | 'T' | 'L';
+// p=clap, w=cowbell, m=tambourine, S=splash, x=china
+// a=hiAgogo, A=lowAgogo
+export type DrumSymbol =
+  | 'k' | 's' | 'h' | 'H' | 'c' | 'r'
+  | 't' | 'T' | 'L'
+  | 'p' | 'w' | 'm' | 'S' | 'x'
+  | 'a' | 'A';
 
 // A single hit at a specific time
 export interface Hit {
