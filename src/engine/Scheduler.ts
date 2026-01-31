@@ -1,6 +1,7 @@
-import type { Step } from '../types/pattern';
+import type { Step, Feel } from '../types/pattern';
 import type { SampleLoader } from './SampleLoader';
 import { SPRITE_MAP } from '../parser/constants';
+import { FeelProcessor } from './FeelProcessor';
 
 /**
  * Lookahead scheduler for precise audio timing.
@@ -22,6 +23,7 @@ export class Scheduler {
   private currentStep = 0;
   private pattern: Step[] = [];
   private bpm = 120;
+  private feel: Feel = 'straight';
   private stepsPerBar = 16;
 
   // Callbacks
@@ -73,6 +75,14 @@ export class Scheduler {
    */
   setBPM(bpm: number): void {
     this.bpm = bpm;
+  }
+
+  /**
+   * Update feel without stopping
+   */
+  setFeel(feel: Feel): void {
+    this.feel = feel;
+    console.log(`🎵 Feel changed to: ${feel}`);
   }
 
   /**
@@ -150,6 +160,13 @@ export class Scheduler {
       return;
     }
 
+    // Calculate step duration for feel processing
+    const secondsPerBeat = 60.0 / this.bpm;
+    const stepDuration = secondsPerBeat / 4; // 16th note duration
+
+    // Apply feel offset to the base time
+    const feelOffset = FeelProcessor.applyFeel(stepIndex, stepDuration, this.feel);
+
     // Schedule each hit in this step
     for (const hit of step.hits) {
       const spriteName = SPRITE_MAP[hit.symbol];
@@ -158,8 +175,8 @@ export class Scheduler {
         continue;
       }
 
-      // Play sample with velocity and offset
-      const when = time + hit.offset;
+      // Play sample with velocity, hit offset, and feel offset
+      const when = time + hit.offset + feelOffset;
       this.sampleLoader.playSample(
         spriteName,
         when,

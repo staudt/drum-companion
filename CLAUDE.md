@@ -14,7 +14,7 @@ A **guitarist-focused drum companion web app** that allows musicians to quickly 
 
 ---
 
-## Current Status (Milestone 3 Complete ✅)
+## Current Status (Milestone 4 Complete ✅)
 
 ### Completed Milestones
 
@@ -43,10 +43,22 @@ A **guitarist-focused drum companion web app** that allows musicians to quickly 
 - Visual feedback (Green=active, Yellow=queued)
 - LocalStorage persistence
 
-### Next Up (Milestone 4)
+**✅ Milestone 4: Feel & Controls**
+- FeelProcessor for swing/shuffle timing offsets
+- Feel selector UI (Straight, Swing, Shuffle)
+- TransportControls component
 - Tap tempo button
-- Feel selector (Straight, Swing, Shuffle)
-- Keyboard shortcuts (Space, F, 1-4, T)
+- Keyboard shortcuts:
+  - Space: Play/Stop
+  - F: Cycle through feels
+  - 1-4: Switch patterns
+  - T: Tap tempo
+
+### Next Up (Milestone 5)
+- Humanize processor (timing/velocity jitter)
+- Density generator (ghost notes)
+- Volume control
+- UI sliders for humanize/density
 
 ### Known Issues
 - **Vitest configuration**: Tests don't run (config issue, not code issue). Parser logic is correct.
@@ -133,7 +145,7 @@ c:/git/drum/
 │   │   ├── AudioEngine.ts       ✅ Main coordinator
 │   │   ├── SampleLoader.ts      ✅ Sprite loading
 │   │   ├── Scheduler.ts         ✅ Lookahead scheduler
-│   │   ├── FeelProcessor.ts     🔜 Next: Swing/shuffle
+│   │   ├── FeelProcessor.ts     ✅ Swing/shuffle timing
 │   │   ├── HumanizeProcessor.ts 🔜 Next: Timing jitter
 │   │   ├── DensityGenerator.ts  🔜 Next: Ghost notes
 │   │   └── FillGenerator.ts     🔜 Next: Fill patterns
@@ -146,8 +158,9 @@ c:/git/drum/
 │   │   │   └── PatternInput.tsx  ✅ Individual pattern input
 │   │   ├── PatternPads/
 │   │   │   └── PatternPads.tsx   ✅ A/B/C/D buttons
-│   │   ├── Transport/           🔜 Next: Transport controls
-│   │   ├── Controls/            🔜 Next: Feel, humanize, etc.
+│   │   ├── Transport/
+│   │   │   └── TransportControls.tsx ✅ Play/stop/BPM/feel/tap tempo
+│   │   ├── Controls/            🔜 Next: Humanize, density sliders
 │   │   └── Persistence/         🔜 Next: Save/load UI
 │   ├── hooks/                   🔜 Custom hooks (tap tempo, etc.)
 │   └── utils/
@@ -179,87 +192,73 @@ c:/git/drum/
 
 ---
 
-### M2: Audio Engine Foundation 🔜 NEXT
-**Goal**: Load sprite sheet and play a hardcoded pattern
+### M2: Audio Engine Foundation ✅ COMPLETE
+**Goal**: Load sprite sheet and play patterns with precise timing
 
 **Tasks**:
-- [ ] Implement `SampleLoader.ts` with sprite support
-- [ ] Create basic `AudioEngine.ts` with play/stop
-- [ ] Implement `Scheduler.ts` with lookahead pattern (100ms lookahead, 25ms tick)
-- [ ] Create `useAudioEngine` hook
-- [ ] Test: Click play → hear drums looping
+- [x] Implement `SampleLoader.ts` with sprite support
+- [x] Create basic `AudioEngine.ts` with play/stop
+- [x] Implement `Scheduler.ts` with lookahead pattern (100ms lookahead, 25ms tick)
+- [x] Live pattern editing with debounce
+- [x] Real-time BPM control
+- [x] Test: Click play → hear drums looping ✅
 
-**Critical Files**:
-- `src/engine/SampleLoader.ts` ⭐
-- `src/engine/Scheduler.ts` ⭐
-- `src/engine/AudioEngine.ts` ⭐
-
-**Key Implementation Details**:
-
-#### SampleLoader.ts
-```typescript
-class SampleLoader {
-  async loadSpriteSheet(audioPath: string, spritePath: string) {
-    // Load sprite.json
-    const spriteResponse = await fetch(spritePath);
-    this.sprites = await spriteResponse.json();
-
-    // Load audio file
-    const audioResponse = await fetch(audioPath);
-    const arrayBuffer = await audioResponse.arrayBuffer();
-    this.audioBuffer = await context.decodeAudioData(arrayBuffer);
-  }
-
-  playSample(spriteName: string, when: number, velocity: number) {
-    const sprite = this.sprites[spriteName];
-    const source = context.createBufferSource();
-    source.buffer = this.audioBuffer;
-    source.start(when, sprite[0]/1000, sprite[1]/1000);
-  }
-}
-```
-
-#### Scheduler.ts (Lookahead Pattern)
-```typescript
-class Scheduler {
-  private scheduleAheadTime = 0.1;  // 100ms lookahead
-  private schedulerInterval = 25;   // 25ms tick
-
-  private tick() {
-    while (nextStepTime < context.currentTime + scheduleAheadTime) {
-      scheduleStep(currentStep, nextStepTime);
-      nextStepTime += stepDuration;
-      currentStep = (currentStep + 1) % pattern.length;
-
-      if (currentStep === 0) onBarBoundary();
-    }
-  }
-}
-```
+**Success**: Audio engine plays patterns with perfect timing, supports live editing
 
 ---
 
-### M3: Pattern Editor UI 📝
-- [ ] Zustand store (useAppStore)
-- [ ] PatternEditor component (4 stacked textareas)
-- [ ] Real-time parsing feedback
-- [ ] Highlight playing pattern
+### M3: Pattern Editor UI ✅ COMPLETE
+**Goal**: 4-pattern system with live editing and switching
+
+**Tasks**:
+- [x] Zustand store (useAppStore) with persistence
+- [x] PatternEditor component (4 patterns stacked)
+- [x] PatternInput component (reusable, validated)
+- [x] PatternPads (A/B/C/D buttons)
+- [x] Real-time parsing feedback
+- [x] Pattern switching on bar boundaries
+- [x] Visual feedback (Green=active, Yellow=queued)
+
+**Success**: All 4 patterns editable, switching works smoothly on bar boundaries
 
 ---
 
-### M4: Transport & Pattern Switching 🎛️
-- [ ] TransportControls (BPM, play/stop, tap tempo)
-- [ ] PatternPads (A/B/C/D)
-- [ ] Bar boundary detection
-- [ ] Pattern switching on bar boundary
-- [ ] Keyboard shortcuts (Space, 1-4, F, T)
+### M4: Feel & Controls ✅ COMPLETE
+**Goal**: Add feel controls, tap tempo, and keyboard shortcuts
+
+**Tasks**:
+- [x] FeelProcessor (swing ~15%, shuffle ~25% timing offsets)
+- [x] TransportControls component (refactored from inline)
+- [x] Feel selector UI (Straight, Swing, Shuffle buttons)
+- [x] Tap tempo button (averages last 4 taps)
+- [x] Keyboard shortcuts:
+  - Space: Play/Stop
+  - F: Cycle through feels
+  - 1-4: Switch patterns
+  - T: Tap tempo
+- [x] Real-time feel changes while playing
+- [x] Updated UI with keyboard shortcut hints
+
+**Success**: Feel changes audibly affect timing, tap tempo works accurately, all shortcuts functional
 
 ---
 
-### M5: Feel & Humanize ⚙️
-- [ ] FeelProcessor (swing, shuffle timing offsets)
-- [ ] HumanizeProcessor (timing/velocity jitter)
-- [ ] UI controls
+### M5: Humanize & Density 🔜 NEXT
+**Goal**: Add humanization, density, and volume controls
+
+**Tasks**:
+- [ ] HumanizeProcessor (timing jitter ±5ms, velocity jitter ±20%)
+- [ ] DensityGenerator (ghost notes on rest steps)
+- [ ] Volume control (master volume slider)
+- [ ] Controls component with sliders
+- [ ] UI sliders for humanize/density/volume
+- [ ] Integrate processors into Scheduler
+- [ ] Real-time parameter adjustments
+
+**Key Implementation**:
+- Humanize: Applied per-hit during scheduling, random but clamped
+- Density: Regenerated on bar boundaries for consistency
+- Volume: Applied to AudioContext destination gain node
 
 ---
 
@@ -432,16 +431,19 @@ npm test         # Run tests (currently broken, needs fix)
 - Generators: density, fills
 
 ### Manual Testing Checklist
-- [ ] Play/stop with spacebar
-- [ ] BPM changes affect timing
-- [ ] Tap tempo works
-- [ ] Pattern switching on bar boundary
-- [ ] Fill triggers correctly
-- [ ] Feel changes timing audibly
-- [ ] Humanize adds variation
-- [ ] Density adds ghost notes
-- [ ] Save/load persists state
-- [ ] Export/import JSON works
+- [x] Play/stop with spacebar ✅
+- [x] BPM changes affect timing ✅
+- [x] Tap tempo works ✅
+- [x] Pattern switching on bar boundary ✅
+- [x] Feel changes timing audibly ✅
+- [x] Keyboard shortcuts (1-4, F, T, Space) ✅
+- [x] Live pattern editing ✅
+- [ ] Fill triggers correctly 🔜
+- [ ] Humanize adds variation 🔜
+- [ ] Density adds ghost notes 🔜
+- [ ] Volume control works 🔜
+- [ ] Save/load persists state 🔜
+- [ ] Export/import JSON works 🔜
 
 ---
 
@@ -454,7 +456,7 @@ When resuming work in a new session:
 3. **Review plan file**: `C:\Users\ricar\.claude\plans\squishy-herding-chipmunk.md`
 4. **Check current milestone**: Look at todo list or file structure
 5. **Run dev server**: `npm run dev` to see current state
-6. **Next milestone**: Currently on M4 (Transport & Pattern Switching)
+6. **Next milestone**: Currently on M5 (Humanize & Density)
 
 ---
 
@@ -463,10 +465,10 @@ When resuming work in a new session:
 - **Drum kit**: User-provided sprite sheet at `public/samples/kit-default/`
 - **Plan file**: `C:\Users\ricar\.claude\plans\squishy-herding-chipmunk.md`
 - **Working directory**: `c:\git\drum`
-- **Dev server**: `http://localhost:5173`
+- **Dev server**: `http://localhost:5173` or `http://localhost:5174`
 
 ---
 
-**Last Updated**: 2026-01-30 (Milestone 3 complete)
-**Current Milestone**: M3 Complete ✅ | Next: M4 (Feel & Controls)
-**Status**: 4-pattern system working! Ready for Feel/Humanize/Density 🎵
+**Last Updated**: 2026-01-30 (Milestone 4 complete)
+**Current Milestone**: M4 Complete ✅ | Next: M5 (Humanize & Density)
+**Status**: Feel controls working! Tap tempo, keyboard shortcuts, swing/shuffle implemented 🎵

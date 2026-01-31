@@ -17,7 +17,7 @@ Drum Companion lets you type drum patterns like `k h s h` (kick, hat, snare, hat
 
 ## Features
 
-### ✅ Working Now (Milestones 1-3)
+### ✅ Working Now (Milestones 1-4)
 
 - ✅ **4-Pattern System**: Edit all patterns (A/B/C/D) simultaneously
 - ✅ **Live Pattern Editing**: Edit patterns while playing (500ms debounce)
@@ -25,17 +25,18 @@ Drum Companion lets you type drum patterns like `k h s h` (kick, hat, snare, hat
 - ✅ **Visual Feedback**: Green=playing, Yellow=queued, step/bar counters
 - ✅ **Pattern Validation**: Min 2 steps, max 64 steps, real-time error feedback
 - ✅ **Tempo Control**: BPM slider (40-240) adjustable during playback
+- ✅ **Tap Tempo**: Calculate BPM by repeatedly tapping the TAP button
+- ✅ **Feel Control**: Straight, swing (triplet), and shuffle timing feels
+- ✅ **Keyboard Shortcuts**: Space (play/stop), F (cycle feel), 1-4 (patterns), T (tap)
 - ✅ **Audio Engine**: Sprite-based sample loading, lookahead scheduler
 - ✅ **State Persistence**: Auto-saves to localStorage
 
-### 🔜 Coming Soon (Milestones 4-7)
+### 🔜 Coming Soon (Milestones 5-7)
 
-- ⏳ **Tap Tempo**: Calculate BPM by tapping
-- ⏳ **Feel Control**: Straight, swing, shuffle timing
 - ⏳ **Humanize**: Subtle timing and velocity variations
 - ⏳ **Density**: Add ghost notes for fuller sound
+- ⏳ **Volume Control**: Master volume slider
 - ⏳ **Fills**: Click active pad for fill, hold for continuous
-- ⏳ **Keyboard Shortcuts**: Space (play/stop), F (fill), 1-4 (patterns), T (tap)
 - ⏳ **Export/Import**: Share sets as JSON files
 
 ### Planned Features (Future)
@@ -196,7 +197,7 @@ To use a different drum kit:
 | Key | Action |
 |-----|--------|
 | `Space` | Play / Stop |
-| `F` | Trigger fill on active pattern |
+| `F` | Cycle through feels (Straight → Swing → Shuffle) |
 | `1` | Switch to Pattern A |
 | `2` | Switch to Pattern B |
 | `3` | Switch to Pattern C |
@@ -213,7 +214,7 @@ To use a different drum kit:
 
 ## Contributing
 
-This project is in active development. Current focus: **Milestone 4 (Feel & Controls)**
+This project is in active development. Current focus: **Milestone 5 (Humanize & Density)**
 
 See [CLAUDE.md](CLAUDE.md) for detailed implementation plan and architecture.
 
@@ -222,9 +223,9 @@ See [CLAUDE.md](CLAUDE.md) for detailed implementation plan and architecture.
 - [x] **M1**: Project setup, parser, types ✅
 - [x] **M2**: Audio engine, sample loading, live editing ✅
 - [x] **M3**: 4-pattern system, pattern switching ✅
-- [ ] **M4**: Transport controls (tap tempo), keyboard shortcuts 🔜
-- [ ] **M5**: Feel (swing/shuffle) and humanize
-- [ ] **M6**: Fills and density
+- [x] **M4**: Feel controls, tap tempo, keyboard shortcuts ✅
+- [ ] **M5**: Humanize, density, volume controls 🔜
+- [ ] **M6**: Fills and advanced features
 - [ ] **M7**: Persistence (export/import), polish, v1 release
 
 ## Known Issues
@@ -252,6 +253,6 @@ MIT (or your preferred license)
 
 ---
 
-**Status**: Milestone 3 Complete ✅ | Next: Feel & Controls 🎛️
+**Status**: Milestone 4 Complete ✅ | Next: Humanize & Density ⚙️
 
 For detailed technical documentation, see [CLAUDE.md](CLAUDE.md)

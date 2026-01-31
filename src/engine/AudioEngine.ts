@@ -1,4 +1,4 @@
-import type { Step } from '../types/pattern';
+import type { Step, Feel } from '../types/pattern';
 import { SampleLoader } from './SampleLoader';
 import { Scheduler } from './Scheduler';
 
@@ -93,6 +93,17 @@ export class AudioEngine {
     }
 
     this.scheduler.setBPM(bpm);
+  }
+
+  /**
+   * Update feel while playing
+   */
+  setFeel(feel: Feel): void {
+    if (!this.initialized || !this.scheduler) {
+      return;
+    }
+
+    this.scheduler.setFeel(feel);
   }
 
   /**
