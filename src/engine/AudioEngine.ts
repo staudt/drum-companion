@@ -10,6 +10,7 @@ export class AudioEngine {
   private context: AudioContext | null = null;
   private sampleLoader: SampleLoader | null = null;
   private scheduler: Scheduler | null = null;
+  private masterGain: GainNode | null = null;
   private initialized = false;
 
   /**
@@ -33,9 +34,14 @@ export class AudioEngine {
         console.log('✅ AudioContext resumed');
       }
 
+      // Create master gain node for volume control
+      this.masterGain = this.context.createGain();
+      this.masterGain.gain.value = 0.8; // Default volume
+      this.masterGain.connect(this.context.destination);
+
       // Create components
       this.sampleLoader = new SampleLoader(this.context);
-      this.scheduler = new Scheduler(this.context, this.sampleLoader);
+      this.scheduler = new Scheduler(this.context, this.sampleLoader, this.masterGain);
 
       // Load default drum kit
       await this.sampleLoader.loadSpriteSheet(
@@ -107,7 +113,43 @@ export class AudioEngine {
   }
 
   /**
+   * Update master volume (0-1)
+   */
+  setVolume(volume: number): void {
+    if (!this.masterGain) {
+      return;
+    }
+
+    // Clamp volume to valid range
+    const clampedVolume = Math.max(0, Math.min(1, volume));
+    this.masterGain.gain.value = clampedVolume;
+  }
+
+  /**
+   * Update humanize amount (0-1)
+   */
+  setHumanize(humanize: number): void {
+    if (!this.scheduler) {
+      return;
+    }
+
+    this.scheduler.setHumanize(humanize);
+  }
+
+  /**
+   * Update density amount (0-1)
+   */
+  setDensity(density: number): void {
+    if (!this.scheduler) {
+      return;
+    }
+
+    this.scheduler.setDensity(density);
+  }
+
+  /**
    * Update pattern while playing (safe - doesn't interrupt playback)
+   * Can also be called when stopped to prepare for next play
    */
   updatePattern(pattern: Step[]): void {
     if (!this.initialized || !this.scheduler) {
@@ -115,11 +157,7 @@ export class AudioEngine {
       return;
     }
 
-    if (!this.isPlaying) {
-      console.warn('⚠️  Cannot update pattern: not playing');
-      return;
-    }
-
+    // Always update the scheduler's pattern - this is safe whether playing or not
     this.scheduler.updatePattern(pattern);
   }
 

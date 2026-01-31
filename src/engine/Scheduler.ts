@@ -2,6 +2,8 @@ import type { Step, Feel } from '../types/pattern';
 import type { SampleLoader } from './SampleLoader';
 import { SPRITE_MAP } from '../parser/constants';
 import { FeelProcessor } from './FeelProcessor';
+import { HumanizeProcessor } from './HumanizeProcessor';
+import { DensityGenerator } from './DensityGenerator';
 
 /**
  * Lookahead scheduler for precise audio timing.
@@ -11,6 +13,7 @@ import { FeelProcessor } from './FeelProcessor';
 export class Scheduler {
   private context: AudioContext;
   private sampleLoader: SampleLoader;
+  private destination: AudioNode;
 
   // Lookahead settings
   private scheduleAheadTime = 0.1;  // 100ms lookahead
@@ -22,17 +25,22 @@ export class Scheduler {
   private nextStepTime = 0;
   private currentStep = 0;
   private pattern: Step[] = [];
+  private processedPattern: Step[] = []; // Pattern with density applied
   private bpm = 120;
   private feel: Feel = 'straight';
+  private humanize = 0;
+  private density = 0;
   private stepsPerBar = 16;
+  private currentBar = 0;
 
   // Callbacks
   private onStepCallback?: (stepIndex: number) => void;
   private onBarBoundaryCallback?: (barIndex: number) => void;
 
-  constructor(context: AudioContext, sampleLoader: SampleLoader) {
+  constructor(context: AudioContext, sampleLoader: SampleLoader, destination: AudioNode) {
     this.context = context;
     this.sampleLoader = sampleLoader;
+    this.destination = destination;
   }
 
   /**
@@ -46,10 +54,18 @@ export class Scheduler {
     this.pattern = pattern;
     this.bpm = bpm;
     this.currentStep = 0;
+    this.currentBar = 0;
     this.nextStepTime = this.context.currentTime;
     this.isPlaying = true;
 
-    console.log(`▶️  Starting scheduler: ${pattern.length} steps @ ${bpm} BPM`);
+    // Apply density processing to pattern
+    this.processedPattern = DensityGenerator.generateWithDensity(
+      this.pattern,
+      this.density,
+      this.currentBar
+    );
+
+    console.log(`▶️  Starting scheduler: ${pattern.length} steps @ ${bpm} BPM (humanize: ${this.humanize}, density: ${this.density})`);
 
     // Start the scheduler loop
     this.scheduleLoop();
@@ -86,6 +102,23 @@ export class Scheduler {
   }
 
   /**
+   * Update humanize amount without stopping (0-1)
+   */
+  setHumanize(humanize: number): void {
+    this.humanize = Math.max(0, Math.min(1, humanize));
+    console.log(`🎵 Humanize changed to: ${this.humanize}`);
+  }
+
+  /**
+   * Update density amount without stopping (0-1)
+   * Note: Takes effect on next bar boundary
+   */
+  setDensity(density: number): void {
+    this.density = Math.max(0, Math.min(1, density));
+    console.log(`🎵 Density changed to: ${this.density}`);
+  }
+
+  /**
    * Update pattern while playing (safe - doesn't interrupt playback)
    */
   updatePattern(pattern: Step[]): void {
@@ -96,6 +129,13 @@ export class Scheduler {
 
     console.log(`🔄 Pattern updated: ${this.pattern.length} → ${pattern.length} steps`);
     this.pattern = pattern;
+
+    // Regenerate processed pattern with density
+    this.processedPattern = DensityGenerator.generateWithDensity(
+      this.pattern,
+      this.density,
+      this.currentBar
+    );
 
     // If current step is beyond new pattern length, reset to 0
     if (this.currentStep >= pattern.length) {
@@ -128,7 +168,7 @@ export class Scheduler {
    * Get current bar index
    */
   getCurrentBar(): number {
-    return Math.floor(this.currentStep / this.stepsPerBar);
+    return this.currentBar;
   }
 
   /**
@@ -151,9 +191,9 @@ export class Scheduler {
    * Schedule a single step to play at the specified time
    */
   private scheduleStep(stepIndex: number, time: number): void {
-    if (!this.pattern.length) return;
+    if (!this.processedPattern.length) return;
 
-    const step = this.pattern[stepIndex % this.pattern.length];
+    const step = this.processedPattern[stepIndex % this.processedPattern.length];
 
     // Skip rest steps
     if (step.isRest || step.hits.length === 0) {
@@ -175,13 +215,19 @@ export class Scheduler {
         continue;
       }
 
-      // Play sample with velocity, hit offset, and feel offset
-      const when = time + hit.offset + feelOffset;
+      // Apply humanization (timing jitter and velocity jitter)
+      const { timingOffset, velocity } = HumanizeProcessor.applyHumanize(
+        hit.velocity,
+        this.humanize
+      );
+
+      // Play sample with humanized velocity, hit offset, feel offset, and timing jitter
+      const when = time + hit.offset + feelOffset + timingOffset;
       this.sampleLoader.playSample(
         spriteName,
         when,
-        hit.velocity,
-        this.context.destination
+        velocity,
+        this.destination
       );
     }
   }
@@ -196,9 +242,6 @@ export class Scheduler {
     const secondsPer16th = secondsPerBeat / 4;
 
     this.nextStepTime += secondsPer16th;
-
-    // Check for bar boundary BEFORE advancing
-    const wasOnBarBoundary = this.currentStep % this.stepsPerBar === 0 && this.currentStep > 0;
 
     // Advance step
     this.currentStep++;
@@ -216,9 +259,28 @@ export class Scheduler {
     // Check for bar boundary AFTER advancing
     const isOnBarBoundary = this.currentStep % this.stepsPerBar === 0;
 
-    if (isOnBarBoundary && this.onBarBoundaryCallback) {
-      const barIndex = Math.floor(this.currentStep / this.stepsPerBar);
-      this.onBarBoundaryCallback(barIndex);
+    if (isOnBarBoundary) {
+      this.currentBar++;
+
+      // Regenerate density pattern for the new bar
+      this.processedPattern = DensityGenerator.generateWithDensity(
+        this.pattern,
+        this.density,
+        this.currentBar
+      );
+
+      // Debug: count ghost notes added
+      if (this.density > 0) {
+        const originalHits = this.pattern.reduce((sum, s) => sum + (s.isRest ? 0 : s.hits.length), 0);
+        const processedHits = this.processedPattern.reduce((sum, s) => sum + (s.isRest ? 0 : s.hits.length), 0);
+        if (processedHits > originalHits) {
+          console.log(`🎵 Bar ${this.currentBar}: Density added ${processedHits - originalHits} ghost notes`);
+        }
+      }
+
+      if (this.onBarBoundaryCallback) {
+        this.onBarBoundaryCallback(this.currentBar);
+      }
     }
   }
 

@@ -14,7 +14,7 @@ A **guitarist-focused drum companion web app** that allows musicians to quickly 
 
 ---
 
-## Current Status (Milestone 4 Complete ✅)
+## Current Status (Milestone 5 Complete ✅)
 
 ### Completed Milestones
 
@@ -54,11 +54,18 @@ A **guitarist-focused drum companion web app** that allows musicians to quickly 
   - 1-4: Switch patterns
   - T: Tap tempo
 
-### Next Up (Milestone 5)
-- Humanize processor (timing/velocity jitter)
-- Density generator (ghost notes)
-- Volume control
-- UI sliders for humanize/density
+**✅ Milestone 5: Humanize & Density**
+- HumanizeProcessor for timing jitter (±5ms) and velocity jitter (±20%)
+- DensityGenerator for adding ghost notes on rest steps
+- Master volume control via GainNode
+- Controls component with sliders for humanize/density/volume
+- Real-time parameter adjustments while playing
+- Density regenerates on bar boundaries for consistency
+
+### Next Up (Milestone 6)
+- FillGenerator (algorithmic fills)
+- Pad click = one-shot fill
+- Pad hold = continuous fills
 
 ### Known Issues
 - **Vitest configuration**: Tests don't run (config issue, not code issue). Parser logic is correct.
@@ -142,12 +149,12 @@ c:/git/drum/
 │   │   ├── parsePattern.test.ts ⚠️  Tests don't run (config issue)
 │   │   └── constants.ts         ✅ Symbol mappings
 │   ├── engine/
-│   │   ├── AudioEngine.ts       ✅ Main coordinator
+│   │   ├── AudioEngine.ts       ✅ Main coordinator (with volume)
 │   │   ├── SampleLoader.ts      ✅ Sprite loading
-│   │   ├── Scheduler.ts         ✅ Lookahead scheduler
+│   │   ├── Scheduler.ts         ✅ Lookahead scheduler (with humanize/density)
 │   │   ├── FeelProcessor.ts     ✅ Swing/shuffle timing
-│   │   ├── HumanizeProcessor.ts 🔜 Next: Timing jitter
-│   │   ├── DensityGenerator.ts  🔜 Next: Ghost notes
+│   │   ├── HumanizeProcessor.ts ✅ Timing/velocity jitter
+│   │   ├── DensityGenerator.ts  ✅ Ghost note generation
 │   │   └── FillGenerator.ts     🔜 Next: Fill patterns
 │   ├── store/
 │   │   ├── useAppStore.ts       ✅ Zustand store with 4 patterns
@@ -160,7 +167,8 @@ c:/git/drum/
 │   │   │   └── PatternPads.tsx   ✅ A/B/C/D buttons
 │   │   ├── Transport/
 │   │   │   └── TransportControls.tsx ✅ Play/stop/BPM/feel/tap tempo
-│   │   ├── Controls/            🔜 Next: Humanize, density sliders
+│   │   ├── Controls/
+│   │   │   └── Controls.tsx      ✅ Humanize/density/volume sliders
 │   │   └── Persistence/         🔜 Next: Save/load UI
 │   ├── hooks/                   🔜 Custom hooks (tap tempo, etc.)
 │   └── utils/
@@ -243,39 +251,40 @@ c:/git/drum/
 
 ---
 
-### M5: Humanize & Density 🔜 NEXT
+### M5: Humanize & Density ✅ COMPLETE
 **Goal**: Add humanization, density, and volume controls
 
 **Tasks**:
-- [ ] HumanizeProcessor (timing jitter ±5ms, velocity jitter ±20%)
-- [ ] DensityGenerator (ghost notes on rest steps)
-- [ ] Volume control (master volume slider)
-- [ ] Controls component with sliders
-- [ ] UI sliders for humanize/density/volume
-- [ ] Integrate processors into Scheduler
-- [ ] Real-time parameter adjustments
+- [x] HumanizeProcessor (timing jitter ±5ms, velocity jitter ±20%)
+- [x] DensityGenerator (ghost notes on rest steps)
+- [x] Volume control (master volume via GainNode)
+- [x] Controls component with sliders
+- [x] UI sliders for humanize/density/volume
+- [x] Integrate processors into Scheduler
+- [x] Real-time parameter adjustments
 
 **Key Implementation**:
 - Humanize: Applied per-hit during scheduling, random but clamped
-- Density: Regenerated on bar boundaries for consistency
-- Volume: Applied to AudioContext destination gain node
+- Density: Regenerated on bar boundaries for consistency (seeded random per bar)
+- Volume: Master GainNode in AudioEngine, routed through Scheduler
+
+**Success**: All three sliders work in real-time, humanize adds variation, density adds ghost notes
 
 ---
 
-### M6: Fills & Density 🥁
+### M6: Fills 🔜 NEXT
 - [ ] FillGenerator (algorithmic fills)
-- [ ] DensityGenerator (ghost notes)
-- [ ] Pad click = fill, hold = continuous
+- [ ] Pad click on active pattern = one-shot fill
+- [ ] Pad hold on active pattern = continuous fills each bar
 
 ---
 
 ### M7: Persistence & Polish 💾
-- [ ] Save/load sets (localStorage)
+- [ ] Save/load sets UI
 - [ ] Export/import JSON
-- [ ] Tap tempo
-- [ ] Volume control
 - [ ] UI polish with Tailwind
 - [ ] Loading states
+- [ ] Mobile responsiveness
 
 ---
 
@@ -438,11 +447,11 @@ npm test         # Run tests (currently broken, needs fix)
 - [x] Feel changes timing audibly ✅
 - [x] Keyboard shortcuts (1-4, F, T, Space) ✅
 - [x] Live pattern editing ✅
+- [x] Humanize adds timing/velocity variation ✅
+- [x] Density adds ghost notes on rests ✅
+- [x] Volume control works ✅
 - [ ] Fill triggers correctly 🔜
-- [ ] Humanize adds variation 🔜
-- [ ] Density adds ghost notes 🔜
-- [ ] Volume control works 🔜
-- [ ] Save/load persists state 🔜
+- [ ] Save/load UI works 🔜
 - [ ] Export/import JSON works 🔜
 
 ---
@@ -456,7 +465,7 @@ When resuming work in a new session:
 3. **Review plan file**: `C:\Users\ricar\.claude\plans\squishy-herding-chipmunk.md`
 4. **Check current milestone**: Look at todo list or file structure
 5. **Run dev server**: `npm run dev` to see current state
-6. **Next milestone**: Currently on M5 (Humanize & Density)
+6. **Next milestone**: M6 (Fills)
 
 ---
 
@@ -469,6 +478,6 @@ When resuming work in a new session:
 
 ---
 
-**Last Updated**: 2026-01-30 (Milestone 4 complete)
-**Current Milestone**: M4 Complete ✅ | Next: M5 (Humanize & Density)
-**Status**: Feel controls working! Tap tempo, keyboard shortcuts, swing/shuffle implemented 🎵
+**Last Updated**: 2026-01-31 (Milestone 5 complete)
+**Current Milestone**: M5 Complete ✅ | Next: M6 (Fills)
+**Status**: Humanize, density, and volume controls working! All three sliders adjust audio in real-time 🎵

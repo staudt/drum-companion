@@ -5,6 +5,7 @@ import { useAppStore } from './store/useAppStore';
 import { PatternEditor } from './components/PatternEditor/PatternEditor';
 import { PatternPads } from './components/PatternPads/PatternPads';
 import { TransportControls } from './components/Transport/TransportControls';
+import { Controls } from './components/Controls/Controls';
 
 function App() {
   const [isInitialized, setIsInitialized] = useState(false);
@@ -20,6 +21,9 @@ function App() {
   const setPlaying = useAppStore((state) => state.setPlaying);
   const setBPM = useAppStore((state) => state.setBPM);
   const setFeel = useAppStore((state) => state.setFeel);
+  const setHumanize = useAppStore((state) => state.setHumanize);
+  const setDensity = useAppStore((state) => state.setDensity);
+  const setVolume = useAppStore((state) => state.setVolume);
   const switchPattern = useAppStore((state) => state.switchPattern);
   const updatePlaybackState = useAppStore((state) => state.updatePlaybackState);
   const applyPendingPatternSwitch = useAppStore((state) => state.applyPendingPatternSwitch);
@@ -70,9 +74,18 @@ function App() {
     }
 
     try {
-      const activePattern = currentSet.patterns[playback.currentPattern];
-      engine.play(activePattern.steps, currentSet.bpm);
-      engine.setFeel(currentSet.feel);
+      // Get fresh state directly from store to avoid stale closure issues
+      // (especially when stop/play happens quickly after an edit)
+      const freshState = useAppStore.getState();
+      const freshSet = freshState.currentSet;
+      const freshPlayback = freshState.playback;
+
+      const activePattern = freshSet.patterns[freshPlayback.currentPattern];
+      engine.play(activePattern.steps, freshSet.bpm);
+      engine.setFeel(freshSet.feel);
+      engine.setHumanize(freshSet.humanize);
+      engine.setDensity(freshSet.density);
+      engine.setVolume(freshSet.volume);
       setPlaying(true);
       setError(null);
     } catch (err) {
@@ -105,27 +118,40 @@ function App() {
     }
   };
 
-  // Update pattern when active pattern text changes (while playing)
+  // Handle Volume change
+  const handleVolumeChange = (newVolume: number) => {
+    setVolume(newVolume);
+    if (audioEngineRef.current) {
+      audioEngineRef.current.setVolume(newVolume);
+    }
+  };
+
+  // Handle Humanize change
+  const handleHumanizeChange = (newHumanize: number) => {
+    setHumanize(newHumanize);
+    if (audioEngineRef.current) {
+      audioEngineRef.current.setHumanize(newHumanize);
+    }
+  };
+
+  // Handle Density change
+  const handleDensityChange = (newDensity: number) => {
+    setDensity(newDensity);
+    if (audioEngineRef.current) {
+      audioEngineRef.current.setDensity(newDensity);
+    }
+  };
+
+  // Update audio engine when active pattern changes (text edit or pattern switch)
   useEffect(() => {
     if (!playback.isPlaying || !audioEngineRef.current) return;
 
     const activePattern = currentSet.patterns[playback.currentPattern];
     if (activePattern.steps.length >= 2) {
+      console.log(`🎵 Updating audio pattern ${playback.currentPattern}: ${activePattern.steps.length} steps`);
       audioEngineRef.current.updatePattern(activePattern.steps);
     }
   }, [currentSet.patterns, playback.currentPattern, playback.isPlaying]);
-
-  // Apply pending pattern switches to audio engine
-  useEffect(() => {
-    if (!playback.isPlaying || !audioEngineRef.current) return;
-
-    // When pattern switches, update audio engine
-    const activePattern = currentSet.patterns[playback.currentPattern];
-    if (activePattern.steps.length >= 2) {
-      console.log(`🎵 Switching audio to pattern ${playback.currentPattern}`);
-      audioEngineRef.current.updatePattern(activePattern.steps);
-    }
-  }, [playback.currentPattern, playback.isPlaying, currentSet.patterns]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -139,8 +165,11 @@ function App() {
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Ignore if user is typing in an input/textarea
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+      // Ignore if user is typing in a text input/textarea (but allow sliders)
+      if (e.target instanceof HTMLInputElement && e.target.type !== 'range') {
+        return;
+      }
+      if (e.target instanceof HTMLTextAreaElement) {
         return;
       }
 
@@ -204,7 +233,7 @@ function App() {
             🥁 Drum Companion
           </h1>
           <p className="text-gray-400">
-            {playback.isPlaying ? 'Now Playing' : 'Milestone 4: Feel & Controls'}
+            {playback.isPlaying ? 'Now Playing' : 'Milestone 5: Humanize & Density'}
           </p>
         </div>
 
@@ -235,6 +264,16 @@ function App() {
           onPlay={handlePlay}
           onStop={handleStop}
           tapTempoRef={tapTempoRef}
+        />
+
+        {/* Humanize, Density, Volume Controls */}
+        <Controls
+          humanize={currentSet.humanize}
+          density={currentSet.density}
+          volume={currentSet.volume}
+          onHumanizeChange={handleHumanizeChange}
+          onDensityChange={handleDensityChange}
+          onVolumeChange={handleVolumeChange}
         />
 
         {/* Playback Info */}

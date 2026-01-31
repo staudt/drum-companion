@@ -1,3 +1,4 @@
+import { useCallback, useMemo } from 'react';
 import { useAppStore } from '../../store/useAppStore';
 import { PatternInput } from './PatternInput';
 
@@ -7,6 +8,20 @@ export function PatternEditor() {
   const setPatternText = useAppStore((state) => state.setPatternText);
 
   const patternIds: Array<'A' | 'B' | 'C' | 'D'> = ['A', 'B', 'C', 'D'];
+
+  // Create stable onChange callbacks for each pattern to prevent debounce resets
+  // (PatternInput's useEffect depends on onChange, so unstable references reset the 500ms timer)
+  const onChangeA = useCallback((text: string) => setPatternText('A', text), [setPatternText]);
+  const onChangeB = useCallback((text: string) => setPatternText('B', text), [setPatternText]);
+  const onChangeC = useCallback((text: string) => setPatternText('C', text), [setPatternText]);
+  const onChangeD = useCallback((text: string) => setPatternText('D', text), [setPatternText]);
+
+  const onChangeHandlers = useMemo(() => ({
+    A: onChangeA,
+    B: onChangeB,
+    C: onChangeC,
+    D: onChangeD,
+  }), [onChangeA, onChangeB, onChangeC, onChangeD]);
 
   return (
     <div className="space-y-3">
@@ -30,7 +45,7 @@ export function PatternEditor() {
             isActive={playback.currentPattern === id}
             isPending={playback.nextPattern === id}
             isPlaying={playback.isPlaying}
-            onChange={(text) => setPatternText(id, text)}
+            onChange={onChangeHandlers[id]}
           />
         ))}
       </div>
