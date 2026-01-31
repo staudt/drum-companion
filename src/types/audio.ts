@@ -22,8 +22,8 @@ export interface ScheduledNote {
 // Playback state
 export interface PlaybackState {
   isPlaying: boolean;
-  currentPattern: 'A' | 'B' | 'C' | 'D';
-  nextPattern: 'A' | 'B' | 'C' | 'D' | null;  // Queued pattern switch
+  currentPattern: number;  // Pattern number 1-10
+  nextPattern: number | null;  // Queued pattern switch
   currentBar: number;
   currentStep: number;
   fillActive: boolean;

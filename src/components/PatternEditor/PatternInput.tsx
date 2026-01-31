@@ -6,7 +6,7 @@ const MAX_PATTERN_STEPS = 64;
 const DEBOUNCE_MS = 500;
 
 interface PatternInputProps {
-  id: 'A' | 'B' | 'C' | 'D';
+  id: number;  // Pattern number 1-10
   text: string;
   isActive: boolean;
   isPending: boolean;

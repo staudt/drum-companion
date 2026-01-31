@@ -1,5 +1,6 @@
 import type { DrumSet, Feel } from './pattern';
 import type { PlaybackState } from './audio';
+import type { UIState } from './ui';
 
 // Application state
 export interface AppState {
@@ -12,23 +13,37 @@ export interface AppState {
   // Saved sets
   savedSets: DrumSet[];
 
-  // UI state
-  selectedPattern: 'A' | 'B' | 'C' | 'D';  // For editing focus
+  // UI state (not persisted)
+  ui: UIState;
 
-  // Actions
-  setPatternText: (patternId: 'A' | 'B' | 'C' | 'D', text: string) => void;
+  // Actions - Pattern management
+  setPatternText: (patternId: number, text: string) => void;
+  addPattern: () => void;  // Add new pattern (max 10)
+  removePattern: (patternId: number) => void;  // Remove pattern (min 1)
+  switchPattern: (patternId: number) => void;
+
+  // Actions - Set properties
   setBPM: (bpm: number) => void;
   setFeel: (feel: Feel) => void;
   setHumanize: (value: number) => void;
   setDensity: (value: number) => void;
   setVolume: (value: number) => void;
+  setKit: (kitName: string) => void;  // NEW: For future multi-kit support
+
+  // Actions - Playback
   play: () => void;
   stop: () => void;
   triggerFill: () => void;
-  switchPattern: (patternId: 'A' | 'B' | 'C' | 'D') => void;
+  updatePlaybackState: (step: number, bar: number) => void;
+  applyPendingPatternSwitch: () => void;
+
+  // Actions - Set management
   saveSet: (name: string) => void;
   loadSet: (id: string) => void;
   deleteSet: (id: string) => void;
   exportSet: () => string;
   importSet: (jsonString: string) => void;
+
+  // Actions - UI state
+  setUIState: (updates: Partial<UIState>) => void;
 }

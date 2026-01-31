@@ -22,9 +22,9 @@ export interface Step {
   isRest: boolean;
 }
 
-// A complete pattern (A, B, C, or D)
+// A complete pattern (numbered 1-10)
 export interface Pattern {
-  id: 'A' | 'B' | 'C' | 'D';
+  id: number;        // Pattern number 1-10
   text: string;      // User-entered text
   steps: Step[];     // Parsed steps
   bars: number;      // Number of bars (derived from steps)
@@ -33,14 +33,16 @@ export interface Pattern {
 // Feel types
 export type Feel = 'straight' | 'swing' | 'shuffle';
 
-// A complete drumset with 4 patterns
+// A complete drumset with up to 10 patterns
 export interface DrumSet {
   id: string;
   name: string;
-  patterns: Record<'A' | 'B' | 'C' | 'D', Pattern>;
+  patterns: Pattern[];  // Dynamic array, max 10 patterns
+  selectedKit: string;  // e.g., 'kit-default'
   bpm: number;
   feel: Feel;
   humanize: number;  // 0-1
   density: number;   // 0-1
   volume: number;    // 0-1
+  version?: number;  // For migration detection (V1 = undefined, V2 = 2)
 }

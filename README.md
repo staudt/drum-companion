@@ -17,27 +17,33 @@ Drum Companion lets you type drum patterns like `k h s h` (kick, hat, snare, hat
 
 ## Features
 
-### ✅ Working Now (Milestones 1-4)
+### ✅ Working Now (Milestones 1-7)
 
-- ✅ **4-Pattern System**: Edit all patterns (A/B/C/D) simultaneously
+- ✅ **Dynamic Pattern System**: Up to 10 patterns (numbered 1-10)
+- ✅ **Sidebar Layout**: Modern sidebar with all controls, collapsible on mobile
 - ✅ **Live Pattern Editing**: Edit patterns while playing (500ms debounce)
-- ✅ **Pattern Switching**: Click pads to switch patterns on bar boundaries
-- ✅ **Visual Feedback**: Green=playing, Yellow=queued, step/bar counters
+- ✅ **Pattern Switching**: Click pattern pads to switch on bar boundaries
+- ✅ **Add/Remove Patterns**: Dynamic pattern management (min 1, max 10)
+- ✅ **Visual Feedback**: Green glow=active, Yellow pulse=queued, step/bar counters
 - ✅ **Pattern Validation**: Min 2 steps, max 64 steps, real-time error feedback
-- ✅ **Tempo Control**: BPM slider (40-240) adjustable during playback
+- ✅ **Tempo Control**: BPM slider (40-240) with editable number input
 - ✅ **Tap Tempo**: Calculate BPM by repeatedly tapping the TAP button
 - ✅ **Feel Control**: Straight, swing (triplet), and shuffle timing feels
-- ✅ **Keyboard Shortcuts**: Space (play/stop), F (cycle feel), 1-4 (patterns), T (tap)
+- ✅ **Humanize**: Subtle timing (±5ms) and velocity (±20%) variations
+- ✅ **Density**: Add ghost notes to rests for fuller sound
+- ✅ **Volume Control**: Master volume slider
+- ✅ **Fills**: Progressive tom/snare fills with crash on beat 1
+- ✅ **Keyboard Shortcuts**: Space (play/stop), F (cycle feel), 1-0 (patterns), T (tap)
 - ✅ **Audio Engine**: Sprite-based sample loading, lookahead scheduler
-- ✅ **State Persistence**: Auto-saves to localStorage
+- ✅ **State Persistence**: Auto-saves to localStorage with automatic migration
+- ✅ **Responsive Design**: Touch-friendly on mobile with hamburger menu
+- ✅ **Accessibility**: Full ARIA labels, keyboard navigation, focus states
 
-### 🔜 Coming Soon (Milestones 5-7)
+### 🔜 Coming Soon (Milestone 8+)
 
-- ⏳ **Humanize**: Subtle timing and velocity variations
-- ⏳ **Density**: Add ghost notes for fuller sound
-- ⏳ **Volume Control**: Master volume slider
-- ⏳ **Fills**: Click active pad for fill, hold for continuous
 - ⏳ **Export/Import**: Share sets as JSON files
+- ⏳ **Pattern Templates**: Pre-made pattern library
+- ⏳ **Multi-Kit Support**: Multiple drum kit options
 
 ### Planned Features (Future)
 
@@ -58,7 +64,9 @@ h  = closed hi-hat
 H  = open hi-hat
 c  = crash cymbal
 r  = ride cymbal
-t  = tom
+t  = tom (mid)
+T  = hi-tom (high)
+L  = low-tom (floor)
 .  = rest (silence)
 ```
 
@@ -99,25 +107,37 @@ Open [http://localhost:5173](http://localhost:5173) in your browser.
 
 ### Quick Start
 
-1. **Type a pattern** in any of the 4 pattern boxes:
+1. **Type a pattern** in the default pattern boxes (starts with 4 patterns):
    ```
-   Pattern A: k h s h k h s h
-   Pattern B: k . s . k k s .
-   Pattern C: kh . sh . kh . sh .
-   Pattern D: k h sh h k . s h
+   Pattern 1: k h s h k h s h
+   Pattern 2: k . s . k k s .
+   Pattern 3: kh . sh . kh . sh .
+   Pattern 4: k h sh h k . s h
    ```
 
 2. **Press Play** (or hit Spacebar)
 
-3. **Switch patterns**: Click pads A/B/C/D (switches on next bar)
+3. **Switch patterns**:
+   - Click pattern number pads (1-10)
+   - Or use keyboard shortcuts (1-9, 0 for pattern 10)
+   - Switches on next bar boundary
 
-4. **Trigger fill**: Click the active pattern pad
+4. **Trigger fill**:
+   - Click the FILL button in top bar
+   - Or click the currently playing pattern pad
+   - Or press the keyboard number of the active pattern
 
-5. **Adjust controls**:
-   - BPM: Set tempo (40-240)
+5. **Adjust controls** (in left sidebar):
+   - Volume: Master output level
+   - Humanize: Subtle timing/velocity variations
+   - Density: Ghost notes on rests
+   - Kit: Drum kit selector (coming soon)
    - Feel: Straight / Swing / Shuffle
-   - Humanize: Add subtle variations
-   - Density: Add ghost notes
+
+6. **Manage patterns**:
+   - Click **+ Add Pattern** to create new patterns (max 10)
+   - Click **X** button to remove patterns (min 1)
+   - Patterns automatically renumber after removal
 
 ## Project Structure
 
@@ -198,11 +218,11 @@ To use a different drum kit:
 |-----|--------|
 | `Space` | Play / Stop |
 | `F` | Cycle through feels (Straight → Swing → Shuffle) |
-| `1` | Switch to Pattern A |
-| `2` | Switch to Pattern B |
-| `3` | Switch to Pattern C |
-| `4` | Switch to Pattern D |
+| `1-9` | Switch to Pattern 1-9 (or trigger fill if already active) |
+| `0` | Switch to Pattern 10 (or trigger fill if already active) |
 | `T` | Tap tempo |
+
+**Note**: Pressing the number key of the currently playing pattern triggers a fill instead of switching.
 
 ## Use Cases
 
@@ -214,7 +234,9 @@ To use a different drum kit:
 
 ## Contributing
 
-This project is in active development. Current focus: **Milestone 5 (Humanize & Density)**
+This project is in active development. Current status: **Milestone 7 Complete ✅**
+
+Next focus: **Milestone 8** (Export/Import, Pattern Templates)
 
 See [CLAUDE.md](CLAUDE.md) for detailed implementation plan and architecture.
 
@@ -224,9 +246,10 @@ See [CLAUDE.md](CLAUDE.md) for detailed implementation plan and architecture.
 - [x] **M2**: Audio engine, sample loading, live editing ✅
 - [x] **M3**: 4-pattern system, pattern switching ✅
 - [x] **M4**: Feel controls, tap tempo, keyboard shortcuts ✅
-- [ ] **M5**: Humanize, density, volume controls 🔜
-- [ ] **M6**: Fills and advanced features
-- [ ] **M7**: Persistence (export/import), polish, v1 release
+- [x] **M5**: Humanize, density, volume controls ✅
+- [x] **M6**: Fills with progressive builds ✅
+- [x] **M7**: UI refactor - sidebar layout, dynamic patterns (1-10) ✅
+- [ ] **M8**: Export/import, pattern templates, multi-kit support 🔜
 
 ## Known Issues
 
@@ -236,11 +259,15 @@ See [CLAUDE.md](CLAUDE.md) for detailed implementation plan and architecture.
 ## How to Test
 
 1. `npm run dev` → Opens [http://localhost:5173](http://localhost:5173)
-2. Click **Play** to start Pattern A
+2. Click **Play** to start Pattern 1
 3. **Edit patterns** while playing (changes apply automatically!)
-4. **Click pattern pads** (A/B/C/D) to switch patterns
-5. **Adjust BPM** slider during playback
-6. Watch visual feedback: Green=playing, Yellow=queued
+4. **Click pattern pads** (1-10) to switch patterns on bar boundaries
+5. **Click FILL button** or active pattern pad to trigger tom/snare fill
+6. **Adjust controls** in left sidebar (volume, humanize, density, feel)
+7. **Adjust BPM** slider or click number to edit directly
+8. **Add/remove patterns** using + and X buttons
+9. Watch visual feedback: Green glow=active, Yellow pulse=queued
+10. Test on mobile: sidebar collapses to hamburger menu
 
 ## License
 
@@ -253,6 +280,6 @@ MIT (or your preferred license)
 
 ---
 
-**Status**: Milestone 4 Complete ✅ | Next: Humanize & Density ⚙️
+**Status**: Milestone 7 Complete ✅ | Modern sidebar layout with dynamic patterns (1-10), fills, humanize, density all working! 🥁
 
 For detailed technical documentation, see [CLAUDE.md](CLAUDE.md)

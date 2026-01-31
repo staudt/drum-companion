@@ -1,10 +1,13 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { Pattern, DrumSet, Feel } from '../types/pattern';
+import type { AppState } from '../types/state';
+import type { PlaybackState } from '../types/audio';
 import { parsePattern, calculateBars } from '../parser/parsePattern';
+import { migrateStateV1toV2, createDefaultState } from './migrations';
 
 // Helper to create a default pattern
-const createDefaultPattern = (id: 'A' | 'B' | 'C' | 'D', text: string): Pattern => {
+const createDefaultPattern = (id: number, text: string): Pattern => {
   const steps = parsePattern(text);
   return {
     id,
@@ -14,61 +17,24 @@ const createDefaultPattern = (id: 'A' | 'B' | 'C' | 'D', text: string): Pattern 
   };
 };
 
-// Helper to create a default drum set
+// Helper to create a default drum set (V2 schema)
 const createDefaultSet = (): DrumSet => ({
-  id: 'default',
+  id: crypto.randomUUID(),
   name: 'Untitled Set',
-  patterns: {
-    A: createDefaultPattern('A', 'k h s h k h s h'),
-    B: createDefaultPattern('B', 'k . s . k k s .'),
-    C: createDefaultPattern('C', 'kh . sh . kh . sh .'),
-    D: createDefaultPattern('D', 'k h sh h k . s h')
-  },
+  patterns: [
+    createDefaultPattern(1, 'k h s h'),
+    createDefaultPattern(2, 'k . s . k k s .'),
+    createDefaultPattern(3, 'kh . sh . kh . sh .'),
+    createDefaultPattern(4, 'k h sh h k . s h')
+  ],
+  selectedKit: 'kit-default',
   bpm: 120,
   feel: 'straight',
   humanize: 0,
   density: 0,
-  volume: 0.8
+  volume: 0.7,
+  version: 2
 });
-
-interface PlaybackState {
-  isPlaying: boolean;
-  currentPattern: 'A' | 'B' | 'C' | 'D';
-  nextPattern: 'A' | 'B' | 'C' | 'D' | null;
-  currentStep: number;
-  currentBar: number;
-}
-
-interface AppState {
-  // Current drum set
-  currentSet: DrumSet;
-
-  // Playback state
-  playback: PlaybackState;
-
-  // Saved sets
-  savedSets: DrumSet[];
-
-  // Actions
-  setPatternText: (patternId: 'A' | 'B' | 'C' | 'D', text: string) => void;
-  setBPM: (bpm: number) => void;
-  setFeel: (feel: Feel) => void;
-  setHumanize: (value: number) => void;
-  setDensity: (value: number) => void;
-  setVolume: (value: number) => void;
-
-  // Playback actions
-  setPlaying: (isPlaying: boolean) => void;
-  switchPattern: (patternId: 'A' | 'B' | 'C' | 'D') => void;
-  applyPendingPatternSwitch: () => void;
-  updatePlaybackState: (step: number, bar: number) => void;
-
-  // Set management
-  saveSet: (name: string) => void;
-  loadSet: (id: string) => void;
-  deleteSet: (id: string) => void;
-  createNewSet: () => void;
-}
 
 export const useAppStore = create<AppState>()(
   persist(
@@ -77,12 +43,17 @@ export const useAppStore = create<AppState>()(
       currentSet: createDefaultSet(),
       playback: {
         isPlaying: false,
-        currentPattern: 'A',
+        currentPattern: 1,
         nextPattern: null,
         currentStep: 0,
-        currentBar: 0
+        currentBar: 0,
+        fillActive: false,
+        fillContinuous: false
       },
       savedSets: [],
+      ui: {
+        sidebarOpen: true
+      },
 
       // Pattern text update
       setPatternText: (patternId, text) => {
@@ -91,13 +62,11 @@ export const useAppStore = create<AppState>()(
             const steps = parsePattern(text);
             const bars = calculateBars(steps.length);
 
-            const newPatterns = { ...state.currentSet.patterns };
-            newPatterns[patternId] = {
-              id: patternId,
-              text,
-              steps,
-              bars
-            };
+            const newPatterns = state.currentSet.patterns.map(p =>
+              p.id === patternId
+                ? { ...p, text, steps, bars }
+                : p
+            );
 
             return {
               currentSet: {
@@ -109,6 +78,110 @@ export const useAppStore = create<AppState>()(
             console.error('Failed to parse pattern:', error);
             return state; // Keep previous state on error
           }
+        });
+      },
+
+      // Add new pattern (max 10)
+      addPattern: () => {
+        set((state) => {
+          if (state.currentSet.patterns.length >= 10) {
+            console.warn('Maximum 10 patterns reached');
+            return state;
+          }
+
+          const newId = state.currentSet.patterns.length + 1;
+          const newPattern = createDefaultPattern(newId, 'k h s h');
+
+          return {
+            currentSet: {
+              ...state.currentSet,
+              patterns: [...state.currentSet.patterns, newPattern]
+            }
+          };
+        });
+      },
+
+      // Remove pattern (min 1)
+      removePattern: (patternId) => {
+        set((state) => {
+          if (state.currentSet.patterns.length <= 1) {
+            console.warn('Cannot remove last pattern');
+            return state;
+          }
+
+          const patterns = state.currentSet.patterns;
+          const removedPattern = patterns.find(p => p.id === patternId);
+          if (!removedPattern) return state;
+
+          // Filter out the removed pattern
+          const filteredPatterns = patterns.filter(p => p.id !== patternId);
+
+          // Renumber patterns sequentially (1, 2, 3, ...)
+          const renumberedPatterns = filteredPatterns.map((p, idx) => ({
+            ...p,
+            id: idx + 1
+          }));
+
+          // Update current pattern if needed
+          let newCurrentPattern = state.playback.currentPattern;
+
+          if (state.playback.currentPattern === patternId) {
+            // Removing current pattern: switch to previous or pattern 1
+            newCurrentPattern = patternId > 1 ? patternId - 1 : 1;
+          } else if (state.playback.currentPattern > patternId) {
+            // Pattern number shifted down
+            newCurrentPattern = state.playback.currentPattern - 1;
+          }
+
+          // Clear next pattern if it was the removed one
+          let newNextPattern = state.playback.nextPattern;
+          if (newNextPattern === patternId) {
+            newNextPattern = null;
+          } else if (newNextPattern && newNextPattern > patternId) {
+            newNextPattern = newNextPattern - 1;
+          }
+
+          return {
+            currentSet: {
+              ...state.currentSet,
+              patterns: renumberedPatterns
+            },
+            playback: {
+              ...state.playback,
+              currentPattern: newCurrentPattern,
+              nextPattern: newNextPattern
+            }
+          };
+        });
+      },
+
+      // Switch pattern
+      switchPattern: (patternId) => {
+        set((state) => {
+          // Validate pattern exists
+          if (!state.currentSet.patterns.find(p => p.id === patternId)) {
+            console.warn(`Pattern ${patternId} does not exist`);
+            return state;
+          }
+
+          // If not playing, switch immediately
+          if (!state.playback.isPlaying) {
+            return {
+              playback: {
+                ...state.playback,
+                currentPattern: patternId,
+                nextPattern: null
+              }
+            };
+          }
+
+          // If playing, queue for next bar
+          return {
+            playback: {
+              ...state.playback,
+              nextPattern: patternId
+            }
+          };
         });
       },
 
@@ -158,37 +231,48 @@ export const useAppStore = create<AppState>()(
         }));
       },
 
-      // Playback actions
-      setPlaying: (isPlaying) => {
+      setKit: (kitName) => {
         set((state) => ({
-          playback: {
-            ...state.playback,
-            isPlaying
+          currentSet: {
+            ...state.currentSet,
+            selectedKit: kitName
           }
         }));
       },
 
-      switchPattern: (patternId) => {
-        set((state) => {
-          // If not playing, switch immediately
-          if (!state.playback.isPlaying) {
-            return {
-              playback: {
-                ...state.playback,
-                currentPattern: patternId,
-                nextPattern: null
-              }
-            };
+      // Playback actions
+      play: () => {
+        set((state) => ({
+          playback: {
+            ...state.playback,
+            isPlaying: true
           }
+        }));
+      },
 
-          // If playing, queue for next bar
-          return {
-            playback: {
-              ...state.playback,
-              nextPattern: patternId
-            }
-          };
-        });
+      stop: () => {
+        set((state) => ({
+          playback: {
+            ...state.playback,
+            isPlaying: false
+          }
+        }));
+      },
+
+      triggerFill: () => {
+        // Fill is handled by AudioEngine, this is just for store updates if needed
+        console.log('[Store] Fill triggered');
+      },
+
+      // Playback state updates (for UI feedback)
+      updatePlaybackState: (step: number, bar: number) => {
+        set((state) => ({
+          playback: {
+            ...state.playback,
+            currentStep: step,
+            currentBar: bar
+          }
+        }));
       },
 
       applyPendingPatternSwitch: () => {
@@ -207,22 +291,12 @@ export const useAppStore = create<AppState>()(
         });
       },
 
-      updatePlaybackState: (step, bar) => {
-        set((state) => ({
-          playback: {
-            ...state.playback,
-            currentStep: step,
-            currentBar: bar
-          }
-        }));
-      },
-
       // Set management
       saveSet: (name) => {
         const state = get();
         const newSet = {
           ...state.currentSet,
-          id: `set-${Date.now()}`,
+          id: crypto.randomUUID(),
           name
         };
 
@@ -237,7 +311,13 @@ export const useAppStore = create<AppState>()(
 
         if (setToLoad) {
           set({
-            currentSet: { ...setToLoad }
+            currentSet: { ...setToLoad },
+            playback: {
+              ...state.playback,
+              currentPattern: 1,  // Reset to first pattern
+              nextPattern: null,
+              isPlaying: false
+            }
           });
         }
       },
@@ -248,18 +328,57 @@ export const useAppStore = create<AppState>()(
         }));
       },
 
-      createNewSet: () => {
-        set({
-          currentSet: createDefaultSet()
-        });
+      exportSet: () => {
+        const state = get();
+        return JSON.stringify(state.currentSet, null, 2);
+      },
+
+      importSet: (jsonString) => {
+        try {
+          const importedSet = JSON.parse(jsonString);
+          // TODO: Validate imported set structure
+          set({
+            currentSet: importedSet
+          });
+        } catch (error) {
+          console.error('Failed to import set:', error);
+        }
+      },
+
+      // UI state
+      setUIState: (updates) => {
+        set((state) => ({
+          ui: {
+            ...state.ui,
+            ...updates
+          }
+        }));
       }
     }),
     {
       name: 'drum-companion-storage',
+      version: 2,
       partialize: (state) => ({
         currentSet: state.currentSet,
         savedSets: state.savedSets
-      })
+      }),
+      migrate: (persistedState: any, version: number) => {
+        console.log(`[Store] Migrating from version ${version} to 2`);
+
+        // If version is 0 or undefined, it's V1 (old schema)
+        if (version === 0 || version === undefined) {
+          try {
+            const migratedState = migrateStateV1toV2(persistedState);
+            console.log('[Store] Migration complete');
+            return migratedState as any;
+          } catch (error) {
+            console.error('[Store] Migration failed, using default state', error);
+            return createDefaultState() as any;
+          }
+        }
+
+        return persistedState;
+      }
     }
   )
 );

@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback } from 'react';
 import { useAppStore } from '../../store/useAppStore';
 import { PatternInput } from './PatternInput';
 
@@ -7,21 +7,10 @@ export function PatternEditor() {
   const playback = useAppStore((state) => state.playback);
   const setPatternText = useAppStore((state) => state.setPatternText);
 
-  const patternIds: Array<'A' | 'B' | 'C' | 'D'> = ['A', 'B', 'C', 'D'];
-
   // Create stable onChange callbacks for each pattern to prevent debounce resets
-  // (PatternInput's useEffect depends on onChange, so unstable references reset the 500ms timer)
-  const onChangeA = useCallback((text: string) => setPatternText('A', text), [setPatternText]);
-  const onChangeB = useCallback((text: string) => setPatternText('B', text), [setPatternText]);
-  const onChangeC = useCallback((text: string) => setPatternText('C', text), [setPatternText]);
-  const onChangeD = useCallback((text: string) => setPatternText('D', text), [setPatternText]);
-
-  const onChangeHandlers = useMemo(() => ({
-    A: onChangeA,
-    B: onChangeB,
-    C: onChangeC,
-    D: onChangeD,
-  }), [onChangeA, onChangeB, onChangeC, onChangeD]);
+  const createOnChange = useCallback((patternId: number) => {
+    return (text: string) => setPatternText(patternId, text);
+  }, [setPatternText]);
 
   return (
     <div className="space-y-3">
@@ -37,15 +26,15 @@ export function PatternEditor() {
       </div>
 
       <div className="space-y-3">
-        {patternIds.map((id) => (
+        {currentSet.patterns.map((pattern) => (
           <PatternInput
-            key={id}
-            id={id}
-            text={currentSet.patterns[id].text}
-            isActive={playback.currentPattern === id}
-            isPending={playback.nextPattern === id}
+            key={pattern.id}
+            id={pattern.id}
+            text={pattern.text}
+            isActive={playback.currentPattern === pattern.id}
+            isPending={playback.nextPattern === pattern.id}
             isPlaying={playback.isPlaying}
-            onChange={onChangeHandlers[id]}
+            onChange={createOnChange(pattern.id)}
           />
         ))}
       </div>
