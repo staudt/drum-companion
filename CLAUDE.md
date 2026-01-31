@@ -48,10 +48,10 @@ A **guitarist-focused drum companion web app** that allows musicians to quickly 
 - Feel selector UI (Straight, Swing, Shuffle)
 - TransportControls component
 - Tap tempo button
-- Keyboard shortcuts:
+- Keyboard shortcuts (M7 update: 1-0 for up to 10 patterns):
   - Space: Play/Stop
   - F: Cycle through feels
-  - 1-4: Switch patterns
+  - 1-0: Switch patterns (1-9 for patterns 1-9, 0 for pattern 10)
   - T: Tap tempo
 
 **✅ Milestone 5: Humanize & Density**
@@ -131,10 +131,16 @@ User Input (text)
 
 ### State Management
 - **Store**: Zustand with persist middleware
-- **Schema**:
-  - `currentSet`: DrumSet (4 patterns A/B/C/D + settings)
-  - `playback`: PlaybackState (isPlaying, currentPattern, etc.)
+- **Schema (M7 Updated)**:
+  - `currentSet`: DrumSet (dynamic patterns 1-10 + settings)
+    - `patterns`: Pattern[] (array instead of Record, max 10)
+    - `selectedKit`: string (NEW in M7)
+  - `playback`: PlaybackState (isPlaying, currentPattern as number, etc.)
+    - `currentPattern`: number (1-10, changed from 'A'|'B'|'C'|'D')
+    - `nextPattern`: number | null
   - `savedSets`: DrumSet[] (library of saved sets)
+  - `ui`: UIState (NEW in M7, non-persisted)
+    - `sidebarOpen`: boolean (for mobile hamburger menu)
 
 ---
 
@@ -152,9 +158,10 @@ c:/git/drum/
 │   ├── main.tsx                 ✅ Entry point
 │   ├── index.css                ✅ Tailwind styles
 │   ├── types/
-│   │   ├── pattern.ts           ✅ Core type definitions
+│   │   ├── pattern.ts           🔄 M7: Updated for numeric IDs (1-10)
 │   │   ├── audio.ts             ✅ Audio types
-│   │   └── state.ts             ✅ App state interface
+│   │   ├── state.ts             🔄 M7: Updated PlaybackState for numeric patterns
+│   │   └── ui.ts                🔄 M7: NEW - UI state (sidebar, etc.)
 │   ├── parser/
 │   │   ├── parsePattern.ts      ✅ Pure parser function
 │   │   ├── parsePattern.test.ts ⚠️  Tests don't run (config issue)
@@ -168,19 +175,32 @@ c:/git/drum/
 │   │   ├── DensityGenerator.ts  ✅ Ghost note generation
 │   │   └── FillGenerator.ts     ✅ Progressive fill patterns
 │   ├── store/
-│   │   ├── useAppStore.ts       ✅ Zustand store with 4 patterns
+│   │   ├── useAppStore.ts       🔄 M7: Updated for dynamic patterns (1-10)
+│   │   ├── migrations.ts        🔄 M7: NEW - V1→V2 migration logic
 │   │   └── persistence.ts       🔜 Export/import helpers
 │   ├── components/
-│   │   ├── PatternEditor/
-│   │   │   ├── PatternEditor.tsx ✅ 4 patterns stacked
+│   │   ├── Sidebar/             🔄 M7: NEW sidebar components
+│   │   │   ├── Sidebar.tsx
+│   │   │   ├── ControlSlider.tsx
+│   │   │   ├── KitSelector.tsx
+│   │   │   └── FeelSelector.tsx
+│   │   ├── TopBar/              🔄 M7: NEW top bar components
+│   │   │   ├── TopBar.tsx
+│   │   │   ├── BPMControl.tsx
+│   │   │   ├── PlaybackControls.tsx
+│   │   │   └── FillControls.tsx
+│   │   ├── PatternArea/         🔄 M7: NEW pattern area (replaces PatternEditor)
+│   │   │   ├── PatternArea.tsx
+│   │   │   └── PatternRow.tsx
+│   │   ├── PatternEditor/       🔄 M7: PatternInput updated for numeric IDs
+│   │   │   ├── PatternEditor.tsx ⚠️ Will be replaced by PatternArea
 │   │   │   └── PatternInput.tsx  ✅ Individual pattern input
-│   │   ├── PatternPads/
-│   │   │   └── PatternPads.tsx   ✅ A/B/C/D buttons + fill trigger
-│   │   ├── Transport/
-│   │   │   └── TransportControls.tsx ✅ Play/stop/BPM/feel/tap tempo
-│   │   ├── Controls/
-│   │   │   └── Controls.tsx      ✅ Humanize/density/volume sliders
-│   │   └── Persistence/         🔜 Next: Save/load UI
+│   │   ├── PatternPads/         ⚠️ M7: Will be deleted (replaced by PatternRow)
+│   │   │   └── PatternPads.tsx
+│   │   ├── Transport/           ⚠️ M7: Will be deleted (replaced by TopBar)
+│   │   │   └── TransportControls.tsx
+│   │   └── Controls/            ⚠️ M7: Will be deleted (moved to Sidebar)
+│   │       └── Controls.tsx
 │   ├── hooks/                   🔜 Custom hooks (tap tempo, etc.)
 │   └── utils/
 │       └── timing.ts            🔜 Time conversion utilities
@@ -305,12 +325,70 @@ c:/git/drum/
 
 ---
 
-### M7: Persistence & Polish 🔜 NEXT
-- [ ] Save/load sets UI
-- [ ] Export/import JSON
-- [ ] UI polish with Tailwind
-- [ ] Loading states
-- [ ] Mobile responsiveness
+### M7: UI Refactor - Sidebar Layout + Dynamic Patterns 🔄 IN PROGRESS
+
+**Goal**: Transform from vertical stack layout with 4 fixed patterns (A/B/C/D) to modern sidebar layout with dynamic pattern management (up to 10 patterns numbered 1-10)
+
+**Major Changes**:
+1. **Sidebar Layout** (left, collapsible):
+   - Logo: 🥁 Drum Companion
+   - Volume slider
+   - Humanize slider
+   - Density slider
+   - Kit selector (placeholder dropdown)
+   - Feel dropdown (convert from radio buttons)
+
+2. **Fixed Top Bar** (non-scrolling):
+   - Row 1: BPM slider + editable number + TAP TEMPO
+   - Row 2: Play/Stop + Set selector + Save | Fill button + "Fill when switch" checkbox
+
+3. **Scrollable Pattern Area**:
+   - Dynamic pattern list (max 10 patterns, numbered 1-10)
+   - Each row: Pattern pad + text input + dropdown (placeholder) + remove button
+   - + button to add new patterns
+
+4. **State Migration**:
+   - Automatic migration from patterns object {A,B,C,D} to patterns array [1-10]
+   - Pattern IDs change from 'A'|'B'|'C'|'D' to numbers 1-10
+   - Keyboard shortcuts update from 1-4 to 1-0 (key 0 = pattern 10)
+
+5. **Mobile Responsive**:
+   - Sidebar collapses to hamburger menu on mobile (<1024px)
+   - Touch-friendly tap targets (min 44px)
+
+**Implementation Phases**:
+- [ ] Phase 1: State migration & pattern management (foundation)
+- [ ] Phase 2: Reusable UI components (sliders, dropdowns)
+- [ ] Phase 3: Sidebar component (with mobile hamburger)
+- [ ] Phase 4: TopBar components (BPM, playback, fill controls)
+- [ ] Phase 5: Pattern area (dynamic add/remove)
+- [ ] Phase 6: Main layout integration (App.tsx refactor)
+- [ ] Phase 7: Responsive design & polish
+- [ ] Phase 8: Testing & migration validation
+- [ ] Phase 9: Cleanup & documentation
+
+**Files to Create** (13 new):
+- Sidebar components: Sidebar.tsx, ControlSlider.tsx, KitSelector.tsx, FeelSelector.tsx
+- TopBar components: TopBar.tsx, BPMControl.tsx, PlaybackControls.tsx, FillControls.tsx
+- Pattern area: PatternArea.tsx, PatternRow.tsx
+- State/types: ui.ts, migrations.ts, patternHelpers.ts
+
+**Files to Modify** (7):
+- types/pattern.ts, types/state.ts, store/useAppStore.ts, App.tsx
+- PatternInput.tsx, AudioEngine.ts, Scheduler.ts
+
+**Files to Delete** (3):
+- TransportControls.tsx, Controls.tsx, PatternPads.tsx (replaced by new components)
+
+**Success Criteria**:
+- All existing features work (no regressions)
+- Migration preserves all user data (zero data loss)
+- Can add/remove patterns dynamically (max 10)
+- Sidebar works on desktop, hamburger menu on mobile
+- Keyboard shortcuts 1-0 functional
+- Set selector dropdown shows saved sets
+
+**Plan File**: `C:\Users\Ricardo\.claude\plans\sorted-bubbling-pretzel.md`
 
 ---
 
@@ -368,6 +446,42 @@ if (isBarBoundary) {
 
 ## UI Layout
 
+### Current Layout (M7 - New Sidebar Design)
+
+```
+┌─────────────────────────────────────────────────────────┐
+│ [☰] (mobile only)                                       │
+├─────────────┬───────────────────────────────────────────┤
+│             │ TOP BAR (Fixed, non-scrolling)            │
+│  SIDEBAR    │  BPM: [slider 120] [TAP]                  │
+│             │  [▶ PLAY] [Set ▼] [SAVE] | [FILL] [☑]    │
+│  🥁 Drum    ├───────────────────────────────────────────┤
+│  Companion  │ PATTERNS (Scrollable)                     │
+│             │  [1] [k h s h           ] [▼] [X]         │
+│  Vol   [==] │  [2] [k . s . k k s .   ] [▼] [X]         │
+│  Human [==] │  [3] [kh . sh . kh . sh ] [▼] [X]         │
+│  Dens  [==] │  [4] [k h sh h k . s h  ] [▼] [X]         │
+│             │  [+] Add Pattern (max 10)                 │
+│  Kit   [▼]  │                                           │
+│  Feel  [▼]  │                                           │
+│             │                                           │
+└─────────────┴───────────────────────────────────────────┘
+```
+
+**Layout Features**:
+- **Sidebar** (300px fixed on desktop, hamburger on mobile):
+  - Logo, Volume, Humanize, Density sliders
+  - Kit selector (placeholder), Feel dropdown
+- **Top Bar** (fixed, always visible):
+  - BPM controls (slider + editable number + tap)
+  - Playback controls (play/stop, set selector, save)
+  - Fill controls (fill button, "fill when switch" checkbox)
+- **Pattern Area** (scrollable):
+  - Dynamic patterns (1-10), add/remove functionality
+  - Each row: pad + input + dropdown + remove button
+
+### Previous Layout (M1-M6 - Deprecated)
+
 ```
 ┌─────────────────────────────────────────────────┐
 │ BPM: [120] [TAP]  [▶ PLAY] [■ STOP]            │
@@ -391,8 +505,6 @@ if (isBarBoundary) {
 ├─────────────────────────────────────────────────┤
 │ [ A ]  [ B ]  [ C ]  [ D ]                     │
 │ Click inactive=switch, Click active=fill       │
-├─────────────────────────────────────────────────┤
-│ Set: [Untitled ▼] [Save] [New] [Export]       │
 └─────────────────────────────────────────────────┘
 ```
 
@@ -492,22 +604,22 @@ When resuming work in a new session:
 
 1. **Read this file** to understand current state
 2. **Check README.md** for setup instructions
-3. **Review plan file**: `C:\Users\ricar\.claude\plans\distributed-soaring-grove.md`
-4. **Check current milestone**: Look at todo list or file structure
+3. **Review plan file**: `C:\Users\Ricardo\.claude\plans\sorted-bubbling-pretzel.md`
+4. **Check current milestone**: M7 (UI Refactor - Sidebar Layout + Dynamic Patterns)
 5. **Run dev server**: `npm run dev` to see current state
-6. **Next milestone**: M7 (Persistence & Polish)
+6. **Next milestone**: M8 (Export/Import JSON, remaining persistence features)
 
 ---
 
 ## Contact & Resources
 
 - **Drum kit**: User-provided sprite sheet at `public/samples/kit-default/`
-- **Plan file**: `C:\Users\ricar\.claude\plans\distributed-soaring-grove.md`
-- **Working directory**: `c:\git\drum`
+- **Plan file**: `C:\Users\Ricardo\.claude\plans\sorted-bubbling-pretzel.md`
+- **Working directory**: `c:\git\drum-companion`
 - **Dev server**: `http://localhost:5173` or `http://localhost:5174`
 
 ---
 
-**Last Updated**: 2026-01-31 (Milestone 6 complete)
-**Current Milestone**: M6 Complete ✅ | Next: M7 (Persistence & Polish)
-**Status**: Fills working! Click active pattern pad while playing to trigger tom/snare fill with crash on beat 1 🥁
+**Last Updated**: 2026-01-31 (Milestone 7 in progress - UI Refactor)
+**Current Milestone**: M7 In Progress 🔄 | UI Refactor: Sidebar + Dynamic Patterns (1-10)
+**Status**: Planning phase complete. Ready to implement sidebar layout, dynamic pattern management, and state migration from A/B/C/D to 1-10. 🎨
