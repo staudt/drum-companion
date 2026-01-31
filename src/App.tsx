@@ -142,6 +142,13 @@ function App() {
     }
   };
 
+  // Handle fill trigger
+  const handleTriggerFill = () => {
+    if (audioEngineRef.current && playback.isPlaying) {
+      audioEngineRef.current.triggerFill();
+    }
+  };
+
   // Update audio engine when active pattern changes (text edit or pattern switch)
   useEffect(() => {
     if (!playback.isPlaying || !audioEngineRef.current) return;
@@ -233,7 +240,7 @@ function App() {
             🥁 Drum Companion
           </h1>
           <p className="text-gray-400">
-            {playback.isPlaying ? 'Now Playing' : 'Milestone 5: Humanize & Density'}
+            {playback.isPlaying ? 'Now Playing' : 'Milestone 6: Fills'}
           </p>
         </div>
 
@@ -304,7 +311,7 @@ function App() {
 
         {/* Pattern Pads */}
         <div className="bg-gray-800 rounded-lg p-6">
-          <PatternPads />
+          <PatternPads onTriggerFill={handleTriggerFill} />
         </div>
 
         {/* Pattern Editor */}
@@ -319,8 +326,8 @@ function App() {
             <li>Edit any of the 4 patterns (A/B/C/D)</li>
             <li>Click Play to start with Pattern A</li>
             <li>Click pattern pads to switch (queued to next bar)</li>
-            <li><strong className="text-green-400">Edit while playing</strong> - changes apply automatically!</li>
-            <li>Adjust BPM, Feel, or use Tap Tempo</li>
+            <li><strong className="text-green-400">Click active pad</strong> to trigger a fill!</li>
+            <li>Adjust BPM, Feel, Humanize, Density</li>
             <li>Click Stop when done</li>
           </ol>
 

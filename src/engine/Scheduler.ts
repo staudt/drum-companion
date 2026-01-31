@@ -4,6 +4,7 @@ import { SPRITE_MAP } from '../parser/constants';
 import { FeelProcessor } from './FeelProcessor';
 import { HumanizeProcessor } from './HumanizeProcessor';
 import { DensityGenerator } from './DensityGenerator';
+import { FillGenerator } from './FillGenerator';
 
 /**
  * Lookahead scheduler for precise audio timing.
@@ -33,6 +34,13 @@ export class Scheduler {
   private stepsPerBar = 16;
   private currentBar = 0;
 
+  // Fill state
+  private fillPattern: Step[] | null = null;
+  private fillStartGlobalStep = -1;
+  private fillEndGlobalStep = -1;
+  private pendingCrash = false;
+  private globalStepCount = 0;
+
   // Callbacks
   private onStepCallback?: (stepIndex: number) => void;
   private onBarBoundaryCallback?: (barIndex: number) => void;
@@ -57,6 +65,13 @@ export class Scheduler {
     this.currentBar = 0;
     this.nextStepTime = this.context.currentTime;
     this.isPlaying = true;
+
+    // Reset fill state
+    this.fillPattern = null;
+    this.fillStartGlobalStep = -1;
+    this.fillEndGlobalStep = -1;
+    this.pendingCrash = false;
+    this.globalStepCount = 0;
 
     // Apply density processing to pattern
     this.processedPattern = DensityGenerator.generateWithDensity(
@@ -172,6 +187,53 @@ export class Scheduler {
   }
 
   /**
+   * Trigger a fill starting from the current position.
+   * The fill runs to the end of the current pattern (not fixed 16 steps).
+   */
+  triggerFill(): void {
+    if (!this.isPlaying) {
+      console.warn('Cannot trigger fill when not playing');
+      return;
+    }
+
+    // Use pattern length as the effective bar size (not hardcoded 16)
+    const patternLength = this.pattern.length;
+    const positionInPattern = this.currentStep % patternLength;
+
+    // Don't trigger if we're on the last step (not enough time)
+    if (positionInPattern >= patternLength - 1) {
+      console.log('🥁 Too late in pattern to trigger fill');
+      return;
+    }
+
+    const remainingSteps = patternLength - positionInPattern;
+
+    // Generate fill from current position
+    const { fillSteps, shouldCrash } = FillGenerator.generateFill(
+      this.pattern,
+      this.currentStep,
+      patternLength  // Pass pattern length so fill knows the boundary
+    );
+
+    // Calculate when fill starts and ends (in global step count)
+    this.fillPattern = fillSteps;
+    this.fillStartGlobalStep = this.globalStepCount;
+    this.fillEndGlobalStep = this.globalStepCount + remainingSteps;
+    this.pendingCrash = shouldCrash;
+
+    console.log(`🥁 Fill triggered: step ${positionInPattern} → ${patternLength - 1} (${remainingSteps} steps), crash=${shouldCrash}`);
+  }
+
+  /**
+   * Check if fill is active at current global step
+   */
+  private isFillActive(): boolean {
+    return this.fillPattern !== null &&
+           this.globalStepCount >= this.fillStartGlobalStep &&
+           this.globalStepCount < this.fillEndGlobalStep;
+  }
+
+  /**
    * Main scheduler loop - checks every 25ms and schedules notes in lookahead window
    */
   private scheduleLoop(): void {
@@ -193,7 +255,24 @@ export class Scheduler {
   private scheduleStep(stepIndex: number, time: number): void {
     if (!this.processedPattern.length) return;
 
-    const step = this.processedPattern[stepIndex % this.processedPattern.length];
+    // Check if we should play crash on beat 1 of pattern loop
+    // Use pattern length, not hardcoded stepsPerBar
+    if (this.pendingCrash && stepIndex % this.pattern.length === 0) {
+      const crashHit = FillGenerator.generateCrashHit();
+      const spriteName = SPRITE_MAP[crashHit.symbol];
+      if (spriteName) {
+        this.sampleLoader.playSample(spriteName, time, crashHit.velocity, this.destination);
+        console.log('💥 Crash on beat 1!');
+      }
+      this.pendingCrash = false;
+    }
+
+    // Use fill pattern if active, otherwise use processed (density) pattern
+    const activePattern = this.isFillActive() && this.fillPattern
+      ? this.fillPattern
+      : this.processedPattern;
+
+    const step = activePattern[stepIndex % activePattern.length];
 
     // Skip rest steps
     if (step.isRest || step.hits.length === 0) {
@@ -242,6 +321,17 @@ export class Scheduler {
     const secondsPer16th = secondsPerBeat / 4;
 
     this.nextStepTime += secondsPer16th;
+
+    // Track global step count for fill timing
+    this.globalStepCount++;
+
+    // Clear fill when we pass its end
+    if (this.fillPattern && this.globalStepCount >= this.fillEndGlobalStep) {
+      this.fillPattern = null;
+      this.fillStartGlobalStep = -1;
+      this.fillEndGlobalStep = -1;
+      console.log('🥁 Fill complete');
+    }
 
     // Advance step
     this.currentStep++;

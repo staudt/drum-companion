@@ -1,7 +1,8 @@
 import type { DrumSymbol } from '../types/pattern';
 
 // Valid drum symbols
-export const VALID_DRUM_SYMBOLS: readonly DrumSymbol[] = ['k', 's', 'h', 'H', 'c', 'r', 't'] as const;
+// t=midTom, T=hiTom, L=lowTom (toms used for fills)
+export const VALID_DRUM_SYMBOLS: readonly DrumSymbol[] = ['k', 's', 'h', 'H', 'c', 'r', 't', 'T', 'L'] as const;
 
 // Check if a character is a valid drum symbol
 export function isValidDrumSymbol(char: string): char is DrumSymbol {
@@ -16,7 +17,9 @@ export const SPRITE_MAP: Record<DrumSymbol, string> = {
   'H': 'hatOpen',
   'c': 'crash',
   'r': 'ride',
-  't': 'midTom'
+  't': 'midTom',
+  'T': 'hiTom',
+  'L': 'lowTom'
 };
 
 // Default velocity for normal hits

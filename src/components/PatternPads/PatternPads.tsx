@@ -1,13 +1,29 @@
+import { useState } from 'react';
 import { useAppStore } from '../../store/useAppStore';
 
-export function PatternPads() {
+interface PatternPadsProps {
+  onTriggerFill?: () => void;
+}
+
+export function PatternPads({ onTriggerFill }: PatternPadsProps) {
   const playback = useAppStore((state) => state.playback);
   const switchPattern = useAppStore((state) => state.switchPattern);
+  const [fillOnTransition, setFillOnTransition] = useState(true);
 
   const patternIds: Array<'A' | 'B' | 'C' | 'D'> = ['A', 'B', 'C', 'D'];
 
   const handlePadClick = (id: 'A' | 'B' | 'C' | 'D') => {
-    switchPattern(id);
+    // If clicking the currently playing pattern, trigger fill
+    if (playback.isPlaying && playback.currentPattern === id) {
+      onTriggerFill?.();
+    } else {
+      // Switch pattern
+      switchPattern(id);
+      // If playing and fill on transition is enabled, trigger fill
+      if (playback.isPlaying && fillOnTransition) {
+        onTriggerFill?.();
+      }
+    }
   };
 
   const getPadStyle = (id: 'A' | 'B' | 'C' | 'D') => {
@@ -46,17 +62,28 @@ export function PatternPads() {
         ))}
       </div>
 
-      <p className="text-xs text-gray-500">
-        {playback.isPlaying ? (
-          <>
-            Click to switch patterns (queued to next bar) •{' '}
-            <span className="text-green-400">Green</span> = playing •{' '}
-            <span className="text-yellow-400">Yellow</span> = queued
-          </>
-        ) : (
-          <>Click to select pattern • Press Play to start</>
-        )}
-      </p>
+      <div className="flex items-center justify-between">
+        <p className="text-xs text-gray-500">
+          {playback.isPlaying ? (
+            <>
+              Click <span className="text-green-400">active pad</span> = fill •{' '}
+              Click other = switch
+            </>
+          ) : (
+            <>Click to select pattern • Press Play to start</>
+          )}
+        </p>
+
+        <label className="flex items-center gap-2 text-xs text-gray-400 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={fillOnTransition}
+            onChange={(e) => setFillOnTransition(e.target.checked)}
+            className="w-4 h-4 rounded bg-gray-700 border-gray-600 text-blue-500 focus:ring-blue-500 focus:ring-offset-gray-800"
+          />
+          Fill on switch
+        </label>
+      </div>
     </div>
   );
 }

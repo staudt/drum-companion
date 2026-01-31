@@ -214,6 +214,19 @@ export class AudioEngine {
   }
 
   /**
+   * Trigger a fill at the current position.
+   * Fill runs from current step to end of bar, then crashes on beat 1.
+   */
+  triggerFill(): void {
+    if (!this.scheduler || !this.isPlaying) {
+      console.warn('⚠️  Cannot trigger fill: not playing');
+      return;
+    }
+
+    this.scheduler.triggerFill();
+  }
+
+  /**
    * Get list of available drum samples
    */
   getAvailableSamples(): string[] {

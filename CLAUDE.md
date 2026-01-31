@@ -14,7 +14,7 @@ A **guitarist-focused drum companion web app** that allows musicians to quickly 
 
 ---
 
-## Current Status (Milestone 5 Complete ✅)
+## Current Status (Milestone 6 Complete ✅)
 
 ### Completed Milestones
 
@@ -62,10 +62,21 @@ A **guitarist-focused drum companion web app** that allows musicians to quickly 
 - Real-time parameter adjustments while playing
 - Density regenerates on bar boundaries for consistency
 
-### Next Up (Milestone 6)
-- FillGenerator (algorithmic fills)
-- Pad click = one-shot fill
-- Pad hold = continuous fills
+**✅ Milestone 6: Fills**
+- FillGenerator with progressive fill algorithm
+- Extended DrumSymbol type with T (hiTom) and L (lowTom)
+- Immediate partial fills (start from current step)
+- Kick pattern preservation (fills don't "kill" the groove)
+- Progressive build: sparse toms → denser toms → snare roll → crash
+- Crash on beat 1 of next bar for musical resolution
+- Click active pattern pad while playing to trigger fill
+
+### Next Up (Milestone 7)
+- Save/load sets UI
+- Export/import JSON
+- UI polish with Tailwind
+- Loading states
+- Mobile responsiveness
 
 ### Known Issues
 - **Vitest configuration**: Tests don't run (config issue, not code issue). Parser logic is correct.
@@ -149,13 +160,13 @@ c:/git/drum/
 │   │   ├── parsePattern.test.ts ⚠️  Tests don't run (config issue)
 │   │   └── constants.ts         ✅ Symbol mappings
 │   ├── engine/
-│   │   ├── AudioEngine.ts       ✅ Main coordinator (with volume)
+│   │   ├── AudioEngine.ts       ✅ Main coordinator (with volume, fills)
 │   │   ├── SampleLoader.ts      ✅ Sprite loading
-│   │   ├── Scheduler.ts         ✅ Lookahead scheduler (with humanize/density)
+│   │   ├── Scheduler.ts         ✅ Lookahead scheduler (with humanize/density/fills)
 │   │   ├── FeelProcessor.ts     ✅ Swing/shuffle timing
 │   │   ├── HumanizeProcessor.ts ✅ Timing/velocity jitter
 │   │   ├── DensityGenerator.ts  ✅ Ghost note generation
-│   │   └── FillGenerator.ts     🔜 Next: Fill patterns
+│   │   └── FillGenerator.ts     ✅ Progressive fill patterns
 │   ├── store/
 │   │   ├── useAppStore.ts       ✅ Zustand store with 4 patterns
 │   │   └── persistence.ts       🔜 Export/import helpers
@@ -164,7 +175,7 @@ c:/git/drum/
 │   │   │   ├── PatternEditor.tsx ✅ 4 patterns stacked
 │   │   │   └── PatternInput.tsx  ✅ Individual pattern input
 │   │   ├── PatternPads/
-│   │   │   └── PatternPads.tsx   ✅ A/B/C/D buttons
+│   │   │   └── PatternPads.tsx   ✅ A/B/C/D buttons + fill trigger
 │   │   ├── Transport/
 │   │   │   └── TransportControls.tsx ✅ Play/stop/BPM/feel/tap tempo
 │   │   ├── Controls/
@@ -272,14 +283,29 @@ c:/git/drum/
 
 ---
 
-### M6: Fills 🔜 NEXT
-- [ ] FillGenerator (algorithmic fills)
-- [ ] Pad click on active pattern = one-shot fill
-- [ ] Pad hold on active pattern = continuous fills each bar
+### M6: Fills ✅ COMPLETE
+**Goal**: Add dynamic fills triggered by clicking active pattern pad
+
+**Tasks**:
+- [x] FillGenerator with progressive build algorithm
+- [x] Extended DrumSymbol type (T=hiTom, L=lowTom)
+- [x] Immediate partial fills (start from current step to bar end)
+- [x] Kick pattern preservation during fills
+- [x] Crash on beat 1 of next bar
+- [x] Click active pad = trigger fill
+- [x] Fill state tracking in Scheduler
+
+**Key Implementation**:
+- Progressive build: sparse hi-toms → mid-toms → low-toms → snare roll
+- Fills preserve kick pattern (maintains groove feel)
+- Fill length adapts based on remaining steps in bar
+- Crash always scheduled for resolution on beat 1
+
+**Success**: Click active pad while playing → hear tom/snare fill → crash on next bar
 
 ---
 
-### M7: Persistence & Polish 💾
+### M7: Persistence & Polish 🔜 NEXT
 - [ ] Save/load sets UI
 - [ ] Export/import JSON
 - [ ] UI polish with Tailwind
@@ -390,9 +416,11 @@ if (isBarBoundary) {
 - Schedule notes slightly ahead (lookahead pattern)
 
 ### Fill Behavior
-- Clicking active pad → one-shot fill
-- Holding active pad → continuous fills (regenerate each bar)
-- Clicking inactive pad → switch pattern (on bar boundary)
+- Clicking active pad → immediate partial fill (from current step to bar end)
+- Fill preserves kick pattern from original groove
+- Progressive build: sparse toms → denser toms → snare roll
+- Crash always plays on beat 1 of next bar
+- Clicking inactive pad → switch pattern (queued to bar boundary)
 
 ---
 
@@ -450,7 +478,9 @@ npm test         # Run tests (currently broken, needs fix)
 - [x] Humanize adds timing/velocity variation ✅
 - [x] Density adds ghost notes on rests ✅
 - [x] Volume control works ✅
-- [ ] Fill triggers correctly 🔜
+- [x] Fill triggers correctly (click active pad) ✅
+- [x] Crash plays on beat 1 after fill ✅
+- [x] Kick pattern preserved during fill ✅
 - [ ] Save/load UI works 🔜
 - [ ] Export/import JSON works 🔜
 
@@ -462,22 +492,22 @@ When resuming work in a new session:
 
 1. **Read this file** to understand current state
 2. **Check README.md** for setup instructions
-3. **Review plan file**: `C:\Users\ricar\.claude\plans\squishy-herding-chipmunk.md`
+3. **Review plan file**: `C:\Users\ricar\.claude\plans\distributed-soaring-grove.md`
 4. **Check current milestone**: Look at todo list or file structure
 5. **Run dev server**: `npm run dev` to see current state
-6. **Next milestone**: M6 (Fills)
+6. **Next milestone**: M7 (Persistence & Polish)
 
 ---
 
 ## Contact & Resources
 
 - **Drum kit**: User-provided sprite sheet at `public/samples/kit-default/`
-- **Plan file**: `C:\Users\ricar\.claude\plans\squishy-herding-chipmunk.md`
+- **Plan file**: `C:\Users\ricar\.claude\plans\distributed-soaring-grove.md`
 - **Working directory**: `c:\git\drum`
 - **Dev server**: `http://localhost:5173` or `http://localhost:5174`
 
 ---
 
-**Last Updated**: 2026-01-31 (Milestone 5 complete)
-**Current Milestone**: M5 Complete ✅ | Next: M6 (Fills)
-**Status**: Humanize, density, and volume controls working! All three sliders adjust audio in real-time 🎵
+**Last Updated**: 2026-01-31 (Milestone 6 complete)
+**Current Milestone**: M6 Complete ✅ | Next: M7 (Persistence & Polish)
+**Status**: Fills working! Click active pattern pad while playing to trigger tom/snare fill with crash on beat 1 🥁
