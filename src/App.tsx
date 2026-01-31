@@ -12,6 +12,8 @@ function App() {
   const [error, setError] = useState<string | null>(null);
 
   const audioEngineRef = useRef<AudioEngine | null>(null);
+  const tapTimesRef = useRef<number[]>([]);
+  const tapTimeoutRef = useRef<number | null>(null);
 
   // Zustand store selectors
   const currentSet = useAppStore((state) => state.currentSet);
@@ -110,6 +112,48 @@ function App() {
     }
   };
 
+  // Handle tap tempo
+  const handleTapTempo = () => {
+    const now = Date.now();
+
+    // Clear previous timeout
+    if (tapTimeoutRef.current) {
+      clearTimeout(tapTimeoutRef.current);
+    }
+
+    // Add current tap time
+    tapTimesRef.current = [...tapTimesRef.current, now];
+
+    // Keep only last 4 taps (for averaging)
+    const recentTaps = tapTimesRef.current.slice(-4);
+
+    // Calculate BPM if we have at least 2 taps
+    if (recentTaps.length >= 2) {
+      const intervals: number[] = [];
+      for (let i = 1; i < recentTaps.length; i++) {
+        intervals.push(recentTaps[i] - recentTaps[i - 1]);
+      }
+
+      // Average interval in milliseconds
+      const avgInterval = intervals.reduce((a, b) => a + b, 0) / intervals.length;
+
+      // Convert to BPM: (60000 ms / interval) = beats per minute
+      const calculatedBpm = Math.round(60000 / avgInterval);
+
+      // Clamp to valid range (40-240)
+      const clampedBpm = Math.max(40, Math.min(240, calculatedBpm));
+
+      setBPM(clampedBpm);
+    }
+
+    tapTimesRef.current = recentTaps;
+
+    // Reset tap times after 2 seconds of inactivity
+    tapTimeoutRef.current = window.setTimeout(() => {
+      tapTimesRef.current = [];
+    }, 2000);
+  };
+
   // Sync audio engine when controls change (BPM, feel, volume, humanize, density)
   useEffect(() => {
     if (!audioEngineRef.current || !playback.isPlaying) return;
@@ -191,6 +235,11 @@ function App() {
           const currentIndex = feels.indexOf(currentSet.feel);
           const nextFeel = feels[(currentIndex + 1) % feels.length];
           setFeel(nextFeel);
+          break;
+
+        case 't': // T - Tap tempo
+          e.preventDefault();
+          handleTapTempo();
           break;
 
         case '1': case '2': case '3': case '4': case '5':

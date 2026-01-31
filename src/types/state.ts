@@ -29,6 +29,7 @@ export interface AppState {
   setDensity: (value: number) => void;
   setVolume: (value: number) => void;
   setKit: (kitName: string) => void;  // NEW: For future multi-kit support
+  updateSetName: (name: string) => void;
 
   // Actions - Playback
   play: () => void;

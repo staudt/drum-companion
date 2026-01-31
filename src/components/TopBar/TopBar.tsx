@@ -23,13 +23,7 @@ export function TopBar({
 
   return (
     <div className="bg-gray-800 border-b border-gray-700 p-4 space-y-4">
-      {/* Row 1: BPM Control */}
-      <BPMControl
-        value={currentSet.bpm}
-        onChange={setBPM}
-      />
-
-      {/* Row 2: Playback Controls | Fill Controls */}
+      {/* Row 1: Playback Controls | Fill Controls */}
       <div className="flex items-center justify-between gap-4">
         {/* Left: Playback Controls */}
         <PlaybackControls
@@ -45,6 +39,12 @@ export function TopBar({
           isPlaying={isPlaying}
         />
       </div>
+
+      {/* Row 2: BPM Control */}
+      <BPMControl
+        value={currentSet.bpm}
+        onChange={setBPM}
+      />
     </div>
   );
 }

@@ -101,50 +101,10 @@ export function BPMControl({
   };
 
   return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between gap-4">
-        <label className="text-sm font-semibold text-gray-300">
-          BPM
-        </label>
-
-        <div className="flex items-center gap-2">
-          {/* Editable BPM number */}
-          {isEditingNumber ? (
-            <input
-              type="number"
-              value={editValue}
-              onChange={handleNumberChange}
-              onBlur={handleNumberBlur}
-              onKeyDown={handleNumberKeyDown}
-              min={min}
-              max={max}
-              autoFocus
-              className="w-16 px-2 py-1 text-2xl font-bold text-blue-400 bg-gray-700 border border-blue-500 rounded
-                text-center focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          ) : (
-            <button
-              onClick={handleNumberClick}
-              className="text-2xl font-bold text-blue-400 hover:text-blue-300 transition-colors
-                px-2 py-1 rounded hover:bg-gray-700 cursor-text"
-              title="Click to edit BPM"
-            >
-              {value}
-            </button>
-          )}
-
-          {/* Tap Tempo button */}
-          <button
-            onClick={handleTapTempo}
-            className="px-4 py-2 text-sm bg-gray-700 hover:bg-gray-600 text-white rounded
-              focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
-            aria-label="Tap tempo to set BPM (T key)"
-            title="Click repeatedly to set tempo (T key)"
-          >
-            TAP
-          </button>
-        </div>
-      </div>
+    <div className="flex items-center gap-4">
+      <label className="text-sm font-semibold text-gray-300 flex-shrink-0">
+        BPM:
+      </label>
 
       {/* BPM Slider */}
       <input
@@ -154,15 +114,48 @@ export function BPMControl({
         step={1}
         value={value}
         onChange={handleSliderChange}
-        className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer
+        className="flex-1 h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer
           accent-blue-500 hover:accent-blue-400
           focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900"
+        aria-label={`BPM: ${value}`}
       />
 
-      <div className="flex justify-between text-xs text-gray-500">
-        <span>{min}</span>
-        <span>{max}</span>
-      </div>
+      {/* Editable BPM number */}
+      {isEditingNumber ? (
+        <input
+          type="number"
+          value={editValue}
+          onChange={handleNumberChange}
+          onBlur={handleNumberBlur}
+          onKeyDown={handleNumberKeyDown}
+          min={min}
+          max={max}
+          autoFocus
+          className="w-16 px-2 py-1 text-lg font-bold text-blue-400 bg-gray-700 border border-blue-500 rounded
+            text-center focus:outline-none focus:ring-2 focus:ring-blue-500 flex-shrink-0"
+        />
+      ) : (
+        <button
+          onClick={handleNumberClick}
+          className="text-lg font-bold text-blue-400 hover:text-blue-300 transition-colors
+            px-2 py-1 rounded hover:bg-gray-700 cursor-text min-w-[4rem] text-center flex-shrink-0"
+          title="Click to edit BPM"
+          aria-label={`BPM: ${value}, click to edit`}
+        >
+          {value}
+        </button>
+      )}
+
+      {/* Tap Tempo button */}
+      <button
+        onClick={handleTapTempo}
+        className="px-4 py-2 text-sm bg-gray-700 hover:bg-gray-600 text-white rounded
+          focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors flex-shrink-0"
+        aria-label="Tap tempo to set BPM (T key)"
+        title="Click repeatedly to set tempo (T key)"
+      >
+        TAP
+      </button>
     </div>
   );
 }

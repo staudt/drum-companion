@@ -3,7 +3,7 @@ import { parsePattern } from '../../parser/parsePattern';
 
 const MIN_PATTERN_STEPS = 2;
 const MAX_PATTERN_STEPS = 64;
-const DEBOUNCE_MS = 500;
+const DEBOUNCE_MS = 200; // Reduced from 500ms for faster live editing
 
 interface PatternInputProps {
   id: number;  // Pattern number 1-10
@@ -33,6 +33,7 @@ export function PatternInput({ id, text, isActive, isPending, isPlaying, onChang
     }
 
     // Validate immediately for UI feedback
+    let isPatternValid = false;
     try {
       const pattern = parsePattern(localText);
 
@@ -52,6 +53,7 @@ export function PatternInput({ id, text, isActive, isPending, isPlaying, onChang
         setIsValid(true);
         setValidationError(null);
         setStepCount(pattern.length);
+        isPatternValid = true;
       }
     } catch (err) {
       setIsValid(false);
@@ -59,12 +61,12 @@ export function PatternInput({ id, text, isActive, isPending, isPlaying, onChang
       setStepCount(0);
     }
 
-    // Debounce the callback to parent
-    debounceTimerRef.current = window.setTimeout(() => {
-      if (localText !== text) {
+    // Only debounce if pattern is valid and different from current
+    if (isPatternValid && localText !== text) {
+      debounceTimerRef.current = window.setTimeout(() => {
         onChange(localText);
-      }
-    }, DEBOUNCE_MS);
+      }, DEBOUNCE_MS);
+    }
 
     return () => {
       if (debounceTimerRef.current !== null) {

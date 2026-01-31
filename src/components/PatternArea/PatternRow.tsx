@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { useAppStore } from '../../store/useAppStore';
 import { PatternInput } from '../PatternEditor/PatternInput';
 
@@ -35,14 +36,13 @@ export function PatternRow({ patternId, onTriggerFill }: PatternRowProps) {
       return;
     }
 
-    if (confirm(`Remove pattern ${patternId}?`)) {
-      removePattern(patternId);
-    }
+    removePattern(patternId);
   };
 
-  const handlePatternChange = (text: string) => {
+  // Use useCallback to stabilize the onChange callback
+  const handlePatternChange = useCallback((text: string) => {
     setPatternText(patternId, text);
-  };
+  }, [setPatternText, patternId]);
 
   const getPadStyle = () => {
     if (isActive) {

@@ -44,45 +44,45 @@ export function PatternArea({ onTriggerFill }: PatternAreaProps) {
           ))}
         </div>
 
-        {/* Add Pattern Button */}
-        <button
-          onClick={handleAddPattern}
-          disabled={!canAddPattern}
-          className={`
-            w-full py-4 rounded-lg font-semibold
-            border-2 border-dashed transition-all
-            focus:outline-none focus:ring-2 focus:ring-blue-500
-            ${canAddPattern
-              ? 'border-gray-600 hover:border-blue-500 text-gray-400 hover:text-blue-400 hover:bg-blue-500/10'
-              : 'border-gray-800 text-gray-700 cursor-not-allowed'
-            }
-          `}
-          aria-label={canAddPattern ? 'Add new pattern' : 'Maximum 10 patterns reached'}
-          title={canAddPattern ? 'Add new pattern' : 'Maximum 10 patterns reached'}
-        >
-          {canAddPattern ? (
-            <>
-              <span className="text-2xl">+</span> Add Pattern
-            </>
-          ) : (
-            'Maximum 10 patterns reached'
-          )}
-        </button>
+        {/* Add Pattern Button + Instructions */}
+        <div className="flex items-center gap-3 p-2">
+          <button
+            onClick={handleAddPattern}
+            disabled={!canAddPattern}
+            className={`
+              w-12 h-12 sm:w-14 sm:h-14 rounded-lg font-bold text-2xl
+              border-2 border-dashed transition-all
+              focus:outline-none focus:ring-2 focus:ring-blue-500
+              flex-shrink-0
+              ${canAddPattern
+                ? 'border-gray-600 hover:border-blue-500 text-gray-400 hover:text-blue-400 hover:bg-blue-500/10'
+                : 'border-gray-800 text-gray-700 cursor-not-allowed'
+              }
+            `}
+            aria-label={canAddPattern ? 'Add new pattern' : 'Maximum 10 patterns reached'}
+            title={canAddPattern ? 'Add new pattern' : 'Maximum 10 patterns reached'}
+          >
+            +
+          </button>
 
-        {/* Legend */}
-        <div className="pt-4 border-t border-gray-800">
-          <p className="text-xs text-gray-500">
-            <span className="text-blue-400">k</span>=kick{' '}
-            <span className="text-blue-400">s</span>=snare{' '}
-            <span className="text-blue-400">h</span>=hat{' '}
-            <span className="text-blue-400">H</span>=open-hat{' '}
-            <span className="text-blue-400">c</span>=crash{' '}
-            <span className="text-blue-400">r</span>=ride{' '}
-            <span className="text-blue-400">t</span>=tom{' '}
-            <span className="text-blue-400">T</span>=hi-tom{' '}
-            <span className="text-blue-400">L</span>=low-tom{' '}
-            <span className="text-blue-400">.</span>=rest
-          </p>
+          {/* Pattern Syntax Instructions */}
+          <div className="flex-1 text-xs text-gray-500 leading-relaxed">
+            <p>
+              <strong className="text-gray-400">Pattern Syntax:</strong>{' '}
+              <span className="text-blue-400">k</span>=kick{' '}
+              <span className="text-blue-400">s</span>=snare{' '}
+              <span className="text-blue-400">h</span>=hat{' '}
+              <span className="text-blue-400">H</span>=open-hat{' '}
+              <span className="text-blue-400">c</span>=crash{' '}
+              <span className="text-blue-400">r</span>=ride{' '}
+              <span className="text-blue-400">t</span>=tom{' '}
+              <span className="text-blue-400">T</span>=hi-tom{' '}
+              <span className="text-blue-400">L</span>=low-tom{' '}
+              <span className="text-blue-400">.</span>=rest{' '}
+              <span className="text-gray-600">|</span>{' '}
+              Use spaces to separate steps (each step = 16th note in 4/4 time)
+            </p>
+          </div>
         </div>
       </div>
     </div>

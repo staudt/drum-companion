@@ -240,6 +240,15 @@ export const useAppStore = create<AppState>()(
         }));
       },
 
+      updateSetName: (name) => {
+        set((state) => ({
+          currentSet: {
+            ...state.currentSet,
+            name
+          }
+        }));
+      },
+
       // Playback actions
       play: () => {
         set((state) => ({
