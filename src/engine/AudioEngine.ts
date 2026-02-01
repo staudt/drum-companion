@@ -186,6 +186,19 @@ export class AudioEngine {
   }
 
   /**
+   * Set callback for when pattern loops (completes one full playthrough)
+   * Used for cycle mode to track pattern repetitions
+   */
+  onPatternLoop(callback: () => void): void {
+    if (!this.scheduler) {
+      console.warn('⚠️  Scheduler not initialized');
+      return;
+    }
+
+    this.scheduler.onPatternLoop(callback);
+  }
+
+  /**
    * Check if audio is currently playing
    */
   get isPlaying(): boolean {

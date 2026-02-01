@@ -28,10 +28,14 @@ export interface Pattern {
   text: string;      // User-entered text
   steps: Step[];     // Parsed steps
   bars: number;      // Number of bars (derived from steps)
+  repeat: number;    // Number of times to repeat in Cycle mode (default 2)
 }
 
 // Feel types
 export type Feel = 'straight' | 'swing' | 'shuffle';
+
+// Playback mode types
+export type PlaybackMode = 'loop' | 'cycle';
 
 // A complete drumset with up to 10 patterns
 export interface DrumSet {
@@ -41,6 +45,7 @@ export interface DrumSet {
   selectedKit: string;  // e.g., 'kit-default'
   bpm: number;
   feel: Feel;
+  playbackMode: PlaybackMode;  // 'loop' = repeat same pattern, 'cycle' = play through set
   humanize: number;  // 0-1
   density: number;   // 0-1
   volume: number;    // 0-1

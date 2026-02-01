@@ -28,4 +28,5 @@ export interface PlaybackState {
   currentStep: number;
   fillActive: boolean;
   fillContinuous: boolean;  // Hold for continuous fills
+  repeatCount: number;  // How many times current pattern has played (for cycle mode)
 }

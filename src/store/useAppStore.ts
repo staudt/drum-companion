@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { Pattern, DrumSet, Feel } from '../types/pattern';
+import type { Pattern, DrumSet, Feel, PlaybackMode } from '../types/pattern';
 import type { AppState } from '../types/state';
 import type { PlaybackState } from '../types/audio';
 import { parsePattern, calculateBars } from '../parser/parsePattern';
@@ -13,7 +13,8 @@ const createDefaultPattern = (id: number, text: string): Pattern => {
     id,
     text,
     steps,
-    bars: calculateBars(steps.length)
+    bars: calculateBars(steps.length),
+    repeat: 2  // Default repeat count for cycle mode
   };
 };
 
@@ -30,6 +31,7 @@ const createDefaultSet = (): DrumSet => ({
   selectedKit: 'kit-default',
   bpm: 120,
   feel: 'straight',
+  playbackMode: 'loop',
   humanize: 0,
   density: 0,
   volume: 0.7,
@@ -48,7 +50,8 @@ export const useAppStore = create<AppState>()(
         currentStep: 0,
         currentBar: 0,
         fillActive: false,
-        fillContinuous: false
+        fillContinuous: false,
+        repeatCount: 0
       },
       savedSets: [],
       ui: {
@@ -78,6 +81,25 @@ export const useAppStore = create<AppState>()(
             console.error('Failed to parse pattern:', error);
             return state; // Keep previous state on error
           }
+        });
+      },
+
+      // Set pattern repeat count
+      setPatternRepeat: (patternId, repeat) => {
+        set((state) => {
+          const clampedRepeat = Math.max(1, Math.min(99, repeat));
+          const newPatterns = state.currentSet.patterns.map(p =>
+            p.id === patternId
+              ? { ...p, repeat: clampedRepeat }
+              : p
+          );
+
+          return {
+            currentSet: {
+              ...state.currentSet,
+              patterns: newPatterns
+            }
+          };
         });
       },
 
@@ -204,6 +226,19 @@ export const useAppStore = create<AppState>()(
         }));
       },
 
+      setPlaybackMode: (playbackMode) => {
+        set((state) => ({
+          currentSet: {
+            ...state.currentSet,
+            playbackMode
+          },
+          playback: {
+            ...state.playback,
+            repeatCount: 0  // Reset repeat count when mode changes
+          }
+        }));
+      },
+
       setHumanize: (humanize) => {
         set((state) => ({
           currentSet: {
@@ -292,11 +327,66 @@ export const useAppStore = create<AppState>()(
               playback: {
                 ...state.playback,
                 currentPattern: state.playback.nextPattern,
-                nextPattern: null
+                nextPattern: null,
+                repeatCount: 0  // Reset repeat count when switching patterns
               }
             };
           }
           return state;
+        });
+      },
+
+      // Handle pattern loop completion (for cycle mode)
+      handlePatternLoop: () => {
+        set((state) => {
+          // Only handle in cycle mode
+          if (state.currentSet.playbackMode !== 'cycle') {
+            return state;
+          }
+
+          // Don't process if a pattern switch is already pending
+          if (state.playback.nextPattern !== null) {
+            return state;
+          }
+
+          const currentPattern = state.currentSet.patterns.find(
+            p => p.id === state.playback.currentPattern
+          );
+          if (!currentPattern) return state;
+
+          const targetRepeats = currentPattern.repeat ?? 2;
+          const newRepeatCount = state.playback.repeatCount + 1;
+
+          console.log(`🔁 Pattern ${currentPattern.id} repeat: ${newRepeatCount}/${targetRepeats}`);
+
+          // Check if we've completed all repeats
+          if (newRepeatCount >= targetRepeats) {
+            // Queue next pattern
+            const patternCount = state.currentSet.patterns.length;
+            const currentIndex = state.currentSet.patterns.findIndex(
+              p => p.id === state.playback.currentPattern
+            );
+            const nextIndex = (currentIndex + 1) % patternCount;
+            const nextPatternId = state.currentSet.patterns[nextIndex].id;
+
+            console.log(`🔄 Cycle: queuing pattern ${nextPatternId} (after ${targetRepeats} repeats)`);
+
+            return {
+              playback: {
+                ...state.playback,
+                nextPattern: nextPatternId,
+                repeatCount: 0
+              }
+            };
+          }
+
+          // Just increment repeat count
+          return {
+            playback: {
+              ...state.playback,
+              repeatCount: newRepeatCount
+            }
+          };
         });
       },
 
@@ -325,7 +415,8 @@ export const useAppStore = create<AppState>()(
               ...state.playback,
               currentPattern: 1,  // Reset to first pattern
               nextPattern: null,
-              isPlaying: false
+              isPlaying: false,
+              repeatCount: 0
             }
           });
         }

@@ -28,6 +28,7 @@ function App() {
   const switchPattern = useAppStore((state) => state.switchPattern);
   const updatePlaybackState = useAppStore((state) => state.updatePlaybackState);
   const applyPendingPatternSwitch = useAppStore((state) => state.applyPendingPatternSwitch);
+  const handlePatternLoop = useAppStore((state) => state.handlePatternLoop);
 
   // Initialize audio engine
   const initializeAudio = async () => {
@@ -49,6 +50,13 @@ function App() {
       // Set up bar boundary callback for pattern switching
       engine.onBarBoundary(() => {
         applyPendingPatternSwitch();
+      });
+
+      // Set up pattern loop callback for cycle mode
+      engine.onPatternLoop(() => {
+        // Get fresh state to handle cycle mode
+        const { handlePatternLoop } = useAppStore.getState();
+        handlePatternLoop();
       });
 
       audioEngineRef.current = engine;
@@ -280,7 +288,6 @@ function App() {
           isLoading={isLoading}
           onPlay={handlePlay}
           onStop={handleStop}
-          onTriggerFill={handleTriggerFill}
         />
 
         {/* Status Messages (if any) */}

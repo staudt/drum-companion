@@ -44,6 +44,7 @@ export class Scheduler {
   // Callbacks
   private onStepCallback?: (stepIndex: number) => void;
   private onBarBoundaryCallback?: (barIndex: number) => void;
+  private onPatternLoopCallback?: () => void;
 
   constructor(context: AudioContext, sampleLoader: SampleLoader, destination: AudioNode) {
     this.context = context;
@@ -170,6 +171,13 @@ export class Scheduler {
    */
   onBarBoundary(callback: (barIndex: number) => void): void {
     this.onBarBoundaryCallback = callback;
+  }
+
+  /**
+   * Set callback for when pattern loops (completes one full playthrough)
+   */
+  onPatternLoop(callback: () => void): void {
+    this.onPatternLoopCallback = callback;
   }
 
   /**
@@ -339,6 +347,11 @@ export class Scheduler {
     // Loop pattern if we've reached the end
     if (this.currentStep >= this.pattern.length) {
       this.currentStep = 0;
+
+      // Notify pattern loop callback (pattern completed one full playthrough)
+      if (this.onPatternLoopCallback) {
+        this.onPatternLoopCallback();
+      }
     }
 
     // Notify step callback

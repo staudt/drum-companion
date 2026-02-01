@@ -11,12 +11,14 @@ export function PatternRow({ patternId, onTriggerFill }: PatternRowProps) {
   const currentSet = useAppStore((state) => state.currentSet);
   const playback = useAppStore((state) => state.playback);
   const setPatternText = useAppStore((state) => state.setPatternText);
+  const setPatternRepeat = useAppStore((state) => state.setPatternRepeat);
   const switchPattern = useAppStore((state) => state.switchPattern);
   const removePattern = useAppStore((state) => state.removePattern);
 
   const pattern = currentSet.patterns.find(p => p.id === patternId);
   const isActive = playback.currentPattern === patternId;
   const isPending = playback.nextPattern === patternId;
+  const isLoopMode = (currentSet.playbackMode ?? 'loop') === 'loop';
 
   if (!pattern) return null;
 
@@ -43,6 +45,27 @@ export function PatternRow({ patternId, onTriggerFill }: PatternRowProps) {
   const handlePatternChange = useCallback((text: string) => {
     setPatternText(patternId, text);
   }, [setPatternText, patternId]);
+
+  const handleRepeatChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseInt(e.target.value, 10);
+    if (!isNaN(value)) {
+      setPatternRepeat(patternId, value);
+    }
+  };
+
+  const incrementRepeat = () => {
+    const current = pattern.repeat ?? 2;
+    if (current < 99) {
+      setPatternRepeat(patternId, current + 1);
+    }
+  };
+
+  const decrementRepeat = () => {
+    const current = pattern.repeat ?? 2;
+    if (current > 1) {
+      setPatternRepeat(patternId, current - 1);
+    }
+  };
 
   const getPadStyle = () => {
     if (isActive) {
@@ -94,6 +117,70 @@ export function PatternRow({ patternId, onTriggerFill }: PatternRowProps) {
           isPlaying={playback.isPlaying}
           onChange={handlePatternChange}
         />
+      </div>
+
+      {/* Repeat Input with custom +/- buttons */}
+      <div className="flex-shrink-0">
+        <div className="flex items-center justify-center mb-1">
+          <label className="text-xs text-gray-500">Repeat</label>
+        </div>
+        <div
+          className={`
+            flex items-center rounded border-2 overflow-hidden
+            ${isLoopMode ? 'border-gray-700' : 'border-gray-600'}
+          `}
+          title={isLoopMode
+            ? 'Repeat count is ignored in Loop mode'
+            : 'Number of times to play this pattern before moving to next'
+          }
+        >
+          <button
+            onClick={decrementRepeat}
+            disabled={isLoopMode || (pattern.repeat ?? 2) <= 1}
+            className={`
+              w-8 h-10 flex items-center justify-center text-lg font-bold
+              transition-colors focus:outline-none
+              ${isLoopMode
+                ? 'bg-gray-800 text-gray-600 cursor-not-allowed'
+                : 'bg-gray-700 text-gray-300 hover:bg-gray-600 hover:text-white'
+              }
+            `}
+            aria-label="Decrease repeat count"
+          >
+            −
+          </button>
+          <input
+            type="number"
+            min={1}
+            max={99}
+            value={pattern.repeat ?? 2}
+            onChange={handleRepeatChange}
+            className={`
+              w-10 h-10 font-mono text-sm text-center border-0
+              focus:outline-none focus:ring-0
+              [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none
+              ${isLoopMode
+                ? 'bg-gray-800 text-gray-500'
+                : 'bg-gray-800 text-white'
+              }
+            `}
+          />
+          <button
+            onClick={incrementRepeat}
+            disabled={isLoopMode || (pattern.repeat ?? 2) >= 99}
+            className={`
+              w-8 h-10 flex items-center justify-center text-lg font-bold
+              transition-colors focus:outline-none
+              ${isLoopMode
+                ? 'bg-gray-800 text-gray-600 cursor-not-allowed'
+                : 'bg-gray-700 text-gray-300 hover:bg-gray-600 hover:text-white'
+              }
+            `}
+            aria-label="Increase repeat count"
+          >
+            +
+          </button>
+        </div>
       </div>
 
       {/* Remove Button - aligned with pattern text box */}

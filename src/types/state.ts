@@ -1,4 +1,4 @@
-import type { DrumSet, Feel } from './pattern';
+import type { DrumSet, Feel, PlaybackMode } from './pattern';
 import type { PlaybackState } from './audio';
 import type { UIState } from './ui';
 
@@ -18,6 +18,7 @@ export interface AppState {
 
   // Actions - Pattern management
   setPatternText: (patternId: number, text: string) => void;
+  setPatternRepeat: (patternId: number, repeat: number) => void;
   addPattern: () => void;  // Add new pattern (max 10)
   removePattern: (patternId: number) => void;  // Remove pattern (min 1)
   switchPattern: (patternId: number) => void;
@@ -25,6 +26,7 @@ export interface AppState {
   // Actions - Set properties
   setBPM: (bpm: number) => void;
   setFeel: (feel: Feel) => void;
+  setPlaybackMode: (mode: PlaybackMode) => void;
   setHumanize: (value: number) => void;
   setDensity: (value: number) => void;
   setVolume: (value: number) => void;
@@ -37,6 +39,7 @@ export interface AppState {
   triggerFill: () => void;
   updatePlaybackState: (step: number, bar: number) => void;
   applyPendingPatternSwitch: () => void;
+  handlePatternLoop: () => void;  // For cycle mode repeat tracking
 
   // Actions - Set management
   saveSet: (name: string) => void;

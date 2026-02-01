@@ -1,32 +1,25 @@
 import { useAppStore } from '../../store/useAppStore';
 import { BPMControl } from './BPMControl';
 import { PlaybackControls } from './PlaybackControls';
-import { FillControls } from './FillControls';
 
 interface TopBarProps {
   isPlaying: boolean;
   isLoading: boolean;
   onPlay: () => void;
   onStop: () => void;
-  onTriggerFill: () => void;
 }
 
 export function TopBar({
   isPlaying,
   isLoading,
   onPlay,
-  onStop,
-  onTriggerFill
+  onStop
 }: TopBarProps) {
   const currentSet = useAppStore((state) => state.currentSet);
   const setBPM = useAppStore((state) => state.setBPM);
 
   return (
-    <div className="bg-gray-800 border-b border-gray-700 p-4 space-y-4">
-      {/* Row 1: Set Name + Save */}
-      <PlaybackControls />
-
-      {/* Row 2: Play | BPM Control | Fill Controls */}
+    <div className="bg-gray-800 border-b border-gray-700 p-4">
       <div className="flex items-center gap-4">
         {/* Play/Stop Button */}
         <button
@@ -58,10 +51,8 @@ export function TopBar({
 
         <div className="border-l border-gray-600 h-8" />
 
-        <FillControls
-          onTriggerFill={onTriggerFill}
-          isPlaying={isPlaying}
-        />
+        {/* Set Name + Save (moved from top row) */}
+        <PlaybackControls />
       </div>
     </div>
   );

@@ -48,18 +48,19 @@ export function patternLetterToNumber(letter: 'A' | 'B' | 'C' | 'D'): number {
  * Migrate a single DrumSet from V1 to V2
  */
 export function migrateDrumSetV1toV2(oldSet: DrumSetV1): DrumSet {
-  // Convert patterns from Record to Array
+  // Convert patterns from Record to Array, adding default repeat count
   const patterns: Pattern[] = [
-    { ...oldSet.patterns.A, id: 1 },
-    { ...oldSet.patterns.B, id: 2 },
-    { ...oldSet.patterns.C, id: 3 },
-    { ...oldSet.patterns.D, id: 4 },
+    { ...oldSet.patterns.A, id: 1, repeat: 2 },
+    { ...oldSet.patterns.B, id: 2, repeat: 2 },
+    { ...oldSet.patterns.C, id: 3, repeat: 2 },
+    { ...oldSet.patterns.D, id: 4, repeat: 2 },
   ];
 
   return {
     ...oldSet,
     patterns,
     selectedKit: 'kit-default',
+    playbackMode: 'loop',
     version: 2,
   };
 }
@@ -76,6 +77,7 @@ export function migratePlaybackStateV1toV2(
     nextPattern: oldPlayback.nextPattern
       ? patternLetterToNumber(oldPlayback.nextPattern)
       : null,
+    repeatCount: 0,
   };
 }
 
@@ -138,24 +140,28 @@ export function createDefaultState(): Partial<AppState> {
       text: 'k h s h',
       steps: [],  // Will be populated by parser
       bars: 1,
+      repeat: 2,
     },
     {
       id: 2,
       text: 'k . s . k k s .',
       steps: [],
       bars: 1,
+      repeat: 2,
     },
     {
       id: 3,
       text: 'kh . sh . kh . sh .',
       steps: [],
       bars: 1,
+      repeat: 2,
     },
     {
       id: 4,
       text: 'k h sh h k . s h',
       steps: [],
       bars: 1,
+      repeat: 2,
     },
   ];
 
@@ -167,6 +173,7 @@ export function createDefaultState(): Partial<AppState> {
       selectedKit: 'kit-default',
       bpm: 120,
       feel: 'straight',
+      playbackMode: 'loop',
       humanize: 0,
       density: 0,
       volume: 0.7,
@@ -180,6 +187,7 @@ export function createDefaultState(): Partial<AppState> {
       currentStep: 0,
       fillActive: false,
       fillContinuous: false,
+      repeatCount: 0,
     },
     savedSets: [],
     ui: {
