@@ -131,7 +131,80 @@ export function migrateStateV1toV2(oldState: any): Partial<AppState> {
 }
 
 /**
- * Create default V2 state (for new users or corrupted data)
+ * Check if a DrumSet is V2 (needs includeInCycle field added)
+ */
+export function isV2DrumSet(set: any): boolean {
+  // V2 if version is explicitly 2, or if patterns array exists but lacks includeInCycle
+  if (set.version === 2) return true;
+  if (Array.isArray(set.patterns) && set.patterns.length > 0) {
+    // Check if any pattern is missing includeInCycle
+    return set.patterns.some((p: any) => p.includeInCycle === undefined);
+  }
+  return false;
+}
+
+/**
+ * Migrate a single DrumSet from V2 to V3
+ * Adds includeInCycle: true to all patterns
+ */
+export function migrateDrumSetV2toV3(oldSet: DrumSet): DrumSet {
+  const patterns: Pattern[] = oldSet.patterns.map(p => ({
+    ...p,
+    includeInCycle: p.includeInCycle ?? true,  // Add includeInCycle if missing
+  }));
+
+  return {
+    ...oldSet,
+    patterns,
+    version: 3,
+  };
+}
+
+/**
+ * Main migration function: V2 → V3
+ * Handles full AppState migration
+ */
+export function migrateStateV2toV3(oldState: any): Partial<AppState> {
+  // Check if migration is needed
+  if (!isV2DrumSet(oldState.currentSet)) {
+    console.log('[Migration] State is already V3 or newer, skipping V2→V3 migration');
+    return oldState;
+  }
+
+  console.log('[Migration] Migrating state from V2 to V3...');
+
+  try {
+    // Migrate current set
+    const migratedCurrentSet = migrateDrumSetV2toV3(oldState.currentSet);
+
+    // Migrate saved sets
+    const migratedSavedSets = (oldState.savedSets || []).map((set: DrumSet) =>
+      isV2DrumSet(set) ? migrateDrumSetV2toV3(set) : set
+    );
+
+    const migratedState = {
+      ...oldState,
+      currentSet: migratedCurrentSet,
+      savedSets: migratedSavedSets,
+    };
+
+    console.log('[Migration] V2→V3 migration successful!', {
+      patternsCount: migratedCurrentSet.patterns.length,
+      allPatternsHaveIncludeInCycle: migratedCurrentSet.patterns.every(
+        (p: Pattern) => p.includeInCycle !== undefined
+      ),
+    });
+
+    return migratedState;
+  } catch (error) {
+    console.error('[Migration] V2→V3 migration failed:', error);
+    console.warn('[Migration] Falling back to corrupted state (will use defaults)');
+    throw error;  // Let the store handle fallback
+  }
+}
+
+/**
+ * Create default V3 state (for new users or corrupted data)
  */
 export function createDefaultState(): Partial<AppState> {
   const defaultPatterns: Pattern[] = [
@@ -142,6 +215,7 @@ export function createDefaultState(): Partial<AppState> {
       bars: 1,
       repeat: 2,
       name: 'Pattern 1',
+      includeInCycle: true,
     },
     {
       id: 2,
@@ -150,6 +224,7 @@ export function createDefaultState(): Partial<AppState> {
       bars: 1,
       repeat: 2,
       name: 'Pattern 2',
+      includeInCycle: true,
     },
     {
       id: 3,
@@ -158,6 +233,7 @@ export function createDefaultState(): Partial<AppState> {
       bars: 1,
       repeat: 2,
       name: 'Pattern 3',
+      includeInCycle: true,
     },
     {
       id: 4,
@@ -166,6 +242,7 @@ export function createDefaultState(): Partial<AppState> {
       bars: 1,
       repeat: 2,
       name: 'Pattern 4',
+      includeInCycle: true,
     },
   ];
 
@@ -181,7 +258,7 @@ export function createDefaultState(): Partial<AppState> {
       humanize: 0,
       density: 0,
       volume: 0.7,
-      version: 2,
+      version: 3,
     },
     playback: {
       isPlaying: false,

@@ -9,12 +9,15 @@ interface PatternAreaProps {
 
 export function PatternArea({ onTriggerFill }: PatternAreaProps) {
   const [fillOnSwitch, setFillOnSwitch] = useState(true);
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+
   const currentSet = useAppStore((state) => state.currentSet);
   const playback = useAppStore((state) => state.playback);
   const addPattern = useAppStore((state) => state.addPattern);
   const setPlaybackMode = useAppStore((state) => state.setPlaybackMode);
+  const reorderPatterns = useAppStore((state) => state.reorderPatterns);
 
-  const canAddPattern = currentSet.patterns.length < 10;
   const playbackMode = currentSet.playbackMode ?? 'loop';  // Default to loop for existing data
   const isPlaying = playback.isPlaying;
 
@@ -30,9 +33,33 @@ export function PatternArea({ onTriggerFill }: PatternAreaProps) {
   ];
 
   const handleAddPattern = () => {
-    if (canAddPattern) {
-      addPattern();
+    addPattern();
+  };
+
+  const handleDragStart = (index: number) => {
+    setDraggedIndex(index);
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    setDragOverIndex(index);
+  };
+
+  const handleDragEnd = () => {
+    if (draggedIndex !== null && dragOverIndex !== null && draggedIndex !== dragOverIndex) {
+      // When dragging down, we need to adjust the target index
+      // because the dragged item is removed from its original position first
+      const adjustedTargetIndex = draggedIndex < dragOverIndex
+        ? dragOverIndex - 1
+        : dragOverIndex;
+      reorderPatterns(draggedIndex, adjustedTargetIndex);
     }
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
   };
 
   return (
@@ -41,7 +68,7 @@ export function PatternArea({ onTriggerFill }: PatternAreaProps) {
         {/* Header */}
         <div className="flex items-center justify-between sticky top-0 bg-gray-900 pb-4 z-10">
           <h2 className="text-lg font-bold text-white">
-            Patterns ({currentSet.patterns.length}/10)
+            Patterns ({currentSet.patterns.length})
           </h2>
 
           {/* Fill Controls + Loop/Cycle Mode Selector */}
@@ -106,32 +133,37 @@ export function PatternArea({ onTriggerFill }: PatternAreaProps) {
 
         {/* Pattern Rows */}
         <div className="space-y-4">
-          {currentSet.patterns.map((pattern) => (
+          {currentSet.patterns.map((pattern, index) => (
             <PatternRow
               key={pattern.id}
               patternId={pattern.id}
+              index={index}
               onTriggerFill={onTriggerFill}
+              onDragStart={handleDragStart}
+              onDragOver={handleDragOver}
+              onDragEnd={handleDragEnd}
+              onDrop={handleDrop}
+              isDragging={draggedIndex === index}
+              isDraggedOver={dragOverIndex === index}
             />
           ))}
         </div>
 
         {/* Add Pattern Button + Instructions */}
-        <div className="flex items-center gap-3 p-2 -m-2 rounded-lg">
+        <div className="flex items-center gap-2 p-2 -m-2 rounded-lg">
+          {/* Spacer to match drag handle width */}
+          <div className="flex-shrink-0 w-3 -ml-2 -mr-1" aria-hidden="true" />
           <button
             onClick={handleAddPattern}
-            disabled={!canAddPattern}
-            className={`
+            className="
               w-12 h-12 sm:w-14 sm:h-14 rounded-lg font-bold text-2xl
               border-2 border-dashed transition-all
               focus:outline-none focus:ring-2 focus:ring-blue-500
               flex-shrink-0
-              ${canAddPattern
-                ? 'border-gray-600 hover:border-blue-500 text-gray-400 hover:text-blue-400 hover:bg-blue-500/10'
-                : 'border-gray-800 text-gray-700 cursor-not-allowed'
-              }
-            `}
-            aria-label={canAddPattern ? 'Add new pattern' : 'Maximum 10 patterns reached'}
-            title={canAddPattern ? 'Add new pattern' : 'Maximum 10 patterns reached'}
+              border-gray-600 hover:border-blue-500 text-gray-400 hover:text-blue-400 hover:bg-blue-500/10
+            "
+            aria-label="Add new pattern"
+            title="Add new pattern"
           >
             +
           </button>

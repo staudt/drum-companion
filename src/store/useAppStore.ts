@@ -4,7 +4,15 @@ import type { Pattern, DrumSet, Feel, PlaybackMode } from '../types/pattern';
 import type { AppState } from '../types/state';
 import type { PlaybackState } from '../types/audio';
 import { parsePattern, calculateBars } from '../parser/parsePattern';
-import { migrateStateV1toV2, createDefaultState } from './migrations';
+import {
+  migrateStateV1toV2,
+  migrateStateV2toV3,
+  createDefaultState,
+  isV1DrumSet,
+  isV2DrumSet,
+  migrateDrumSetV1toV2,
+  migrateDrumSetV2toV3
+} from './migrations';
 
 // Helper to create a default pattern
 const createDefaultPattern = (id: number, text: string): Pattern => {
@@ -15,11 +23,12 @@ const createDefaultPattern = (id: number, text: string): Pattern => {
     steps,
     bars: calculateBars(steps.length),
     repeat: 2,  // Default repeat count for cycle mode
-    name: `Pattern ${id}`  // Default name
+    name: `Pattern ${id}`,  // Default name
+    includeInCycle: true  // Include in cycle mode by default
   };
 };
 
-// Helper to create a default drum set (V2 schema)
+// Helper to create a default drum set (V3 schema)
 const createDefaultSet = (): DrumSet => ({
   id: crypto.randomUUID(),
   name: 'Untitled Set',
@@ -36,7 +45,7 @@ const createDefaultSet = (): DrumSet => ({
   humanize: 0,
   density: 0,
   volume: 0.7,
-  version: 2
+  version: 3
 });
 
 export const useAppStore = create<AppState>()(
@@ -122,14 +131,27 @@ export const useAppStore = create<AppState>()(
         });
       },
 
-      // Add new pattern (max 10)
+      // Toggle pattern includeInCycle flag
+      togglePatternIncludeInCycle: (patternId) => {
+        set((state) => {
+          const newPatterns = state.currentSet.patterns.map(p =>
+            p.id === patternId
+              ? { ...p, includeInCycle: !p.includeInCycle }
+              : p
+          );
+
+          return {
+            currentSet: {
+              ...state.currentSet,
+              patterns: newPatterns
+            }
+          };
+        });
+      },
+
+      // Add new pattern
       addPattern: () => {
         set((state) => {
-          if (state.currentSet.patterns.length >= 10) {
-            console.warn('Maximum 10 patterns reached');
-            return state;
-          }
-
           const newId = state.currentSet.patterns.length + 1;
           const newPattern = createDefaultPattern(newId, 'k h s h');
 
@@ -186,6 +208,68 @@ export const useAppStore = create<AppState>()(
             newNextPattern = null;
           } else if (newNextPattern && newNextPattern > patternId) {
             newNextPattern = newNextPattern - 1;
+          }
+
+          return {
+            currentSet: {
+              ...state.currentSet,
+              patterns: renumberedPatterns
+            },
+            playback: {
+              ...state.playback,
+              currentPattern: newCurrentPattern,
+              nextPattern: newNextPattern
+            }
+          };
+        });
+      },
+
+      // Reorder patterns (drag-and-drop)
+      reorderPatterns: (fromIndex, toIndex) => {
+        set((state) => {
+          if (fromIndex === toIndex) return state;
+          if (fromIndex < 0 || fromIndex >= state.currentSet.patterns.length) return state;
+          if (toIndex < 0 || toIndex >= state.currentSet.patterns.length) return state;
+
+          const patterns = [...state.currentSet.patterns];
+          const [movedPattern] = patterns.splice(fromIndex, 1);
+          patterns.splice(toIndex, 0, movedPattern);
+
+          // Renumber patterns sequentially (1, 2, 3, ...)
+          // Also update default names if they match the pattern "Pattern <number>"
+          const renumberedPatterns = patterns.map((p, idx) => {
+            const newId = idx + 1;
+            const isDefaultName = !p.name || p.name.match(/^Pattern \d+$/);
+            return {
+              ...p,
+              id: newId,
+              name: isDefaultName ? `Pattern ${newId}` : p.name
+            };
+          });
+
+          // Track which pattern moved where
+          const oldIdToNewId = new Map<number, number>();
+          renumberedPatterns.forEach((p, idx) => {
+            const oldPattern = state.currentSet.patterns.find(old => old.text === p.text && old.name === p.name);
+            if (oldPattern) {
+              oldIdToNewId.set(oldPattern.id, p.id);
+            }
+          });
+
+          // Update current pattern to follow the moved pattern
+          let newCurrentPattern = state.playback.currentPattern;
+          const mappedCurrent = oldIdToNewId.get(state.playback.currentPattern);
+          if (mappedCurrent !== undefined) {
+            newCurrentPattern = mappedCurrent;
+          }
+
+          // Update next pattern to follow the moved pattern
+          let newNextPattern = state.playback.nextPattern;
+          if (newNextPattern !== null) {
+            const mappedNext = oldIdToNewId.get(newNextPattern);
+            if (mappedNext !== undefined) {
+              newNextPattern = mappedNext;
+            }
           }
 
           return {
@@ -386,13 +470,35 @@ export const useAppStore = create<AppState>()(
 
           // Check if we've completed all repeats
           if (newRepeatCount >= targetRepeats) {
-            // Queue next pattern
-            const patternCount = state.currentSet.patterns.length;
-            const currentIndex = state.currentSet.patterns.findIndex(
+            // Find next pattern that is included in cycle
+            const patterns = state.currentSet.patterns;
+            const includedPatterns = patterns.filter(p => p.includeInCycle);
+
+            // Edge case: no patterns included in cycle
+            if (includedPatterns.length === 0) {
+              console.warn('⚠️ No patterns included in cycle, staying on current pattern');
+              return {
+                playback: {
+                  ...state.playback,
+                  repeatCount: 0  // Reset count but stay on current
+                }
+              };
+            }
+
+            // Find next included pattern (circular search)
+            const currentIndex = patterns.findIndex(
               p => p.id === state.playback.currentPattern
             );
-            const nextIndex = (currentIndex + 1) % patternCount;
-            const nextPatternId = state.currentSet.patterns[nextIndex].id;
+            let nextIndex = (currentIndex + 1) % patterns.length;
+            let searchCount = 0;
+
+            // Search for next pattern with includeInCycle === true
+            while (!patterns[nextIndex].includeInCycle && searchCount < patterns.length) {
+              nextIndex = (nextIndex + 1) % patterns.length;
+              searchCount++;
+            }
+
+            const nextPatternId = patterns[nextIndex].id;
 
             console.log(`🔄 Cycle: queuing pattern ${nextPatternId} (after ${targetRepeats} repeats)`);
 
@@ -481,13 +587,44 @@ export const useAppStore = create<AppState>()(
 
       importSet: (jsonString) => {
         try {
-          const importedSet = JSON.parse(jsonString);
-          // TODO: Validate imported set structure
+          let importedSet = JSON.parse(jsonString);
+
+          // Migrate imported set if needed (V1 → V2 → V3)
+          if (isV1DrumSet(importedSet)) {
+            console.log('[Import] Migrating imported set from V1 to V2');
+            importedSet = migrateDrumSetV1toV2(importedSet);
+          }
+
+          if (isV2DrumSet(importedSet)) {
+            console.log('[Import] Migrating imported set from V2 to V3');
+            importedSet = migrateDrumSetV2toV3(importedSet);
+          }
+
+          // Validate that all patterns have includeInCycle
+          const allPatternsValid = importedSet.patterns?.every(
+            (p: Pattern) => p.includeInCycle !== undefined
+          );
+
+          if (!allPatternsValid) {
+            console.warn('[Import] Some patterns missing includeInCycle, adding default');
+            importedSet.patterns = importedSet.patterns.map((p: Pattern) => ({
+              ...p,
+              includeInCycle: p.includeInCycle ?? true
+            }));
+          }
+
           set({
             currentSet: importedSet
           });
+
+          console.log('[Import] Set imported successfully', {
+            name: importedSet.name,
+            version: importedSet.version,
+            patterns: importedSet.patterns.length
+          });
         } catch (error) {
           console.error('Failed to import set:', error);
+          alert('Failed to import set. Please check the JSON format.');
         }
       },
 
@@ -503,27 +640,35 @@ export const useAppStore = create<AppState>()(
     }),
     {
       name: 'drum-companion-storage',
-      version: 2,
+      version: 3,
       partialize: (state) => ({
         currentSet: state.currentSet,
         savedSets: state.savedSets
       }),
       migrate: (persistedState: any, version: number) => {
-        console.log(`[Store] Migrating from version ${version} to 2`);
+        console.log(`[Store] Migrating from version ${version} to 3`);
 
-        // If version is 0 or undefined, it's V1 (old schema)
-        if (version === 0 || version === undefined) {
-          try {
-            const migratedState = migrateStateV1toV2(persistedState);
-            console.log('[Store] Migration complete');
-            return migratedState as any;
-          } catch (error) {
-            console.error('[Store] Migration failed, using default state', error);
-            return createDefaultState() as any;
+        try {
+          let state = persistedState;
+
+          // V1 → V2 migration (if needed)
+          if (version === 0 || version === undefined) {
+            console.log('[Store] Running V1 → V2 migration');
+            state = migrateStateV1toV2(state);
           }
-        }
 
-        return persistedState;
+          // V2 → V3 migration (if needed)
+          if (version <= 2) {
+            console.log('[Store] Running V2 → V3 migration');
+            state = migrateStateV2toV3(state);
+          }
+
+          console.log('[Store] Migration complete');
+          return state as any;
+        } catch (error) {
+          console.error('[Store] Migration failed, using default state', error);
+          return createDefaultState() as any;
+        }
       }
     }
   )

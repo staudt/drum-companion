@@ -4,15 +4,33 @@ import { PatternInput } from '../PatternEditor/PatternInput';
 
 interface PatternRowProps {
   patternId: number;
+  index: number;
   onTriggerFill: () => void;
+  onDragStart: (index: number) => void;
+  onDragOver: (e: React.DragEvent, index: number) => void;
+  onDragEnd: () => void;
+  onDrop: (e: React.DragEvent) => void;
+  isDragging: boolean;
+  isDraggedOver: boolean;
 }
 
-export function PatternRow({ patternId, onTriggerFill }: PatternRowProps) {
+export function PatternRow({
+  patternId,
+  index,
+  onTriggerFill,
+  onDragStart,
+  onDragOver,
+  onDragEnd,
+  onDrop,
+  isDragging,
+  isDraggedOver
+}: PatternRowProps) {
   const currentSet = useAppStore((state) => state.currentSet);
   const playback = useAppStore((state) => state.playback);
   const setPatternText = useAppStore((state) => state.setPatternText);
   const setPatternName = useAppStore((state) => state.setPatternName);
   const setPatternRepeat = useAppStore((state) => state.setPatternRepeat);
+  const togglePatternIncludeInCycle = useAppStore((state) => state.togglePatternIncludeInCycle);
   const switchPattern = useAppStore((state) => state.switchPattern);
   const removePattern = useAppStore((state) => state.removePattern);
 
@@ -23,7 +41,7 @@ export function PatternRow({ patternId, onTriggerFill }: PatternRowProps) {
 
   // Calculate current step index for this pattern (if active and playing)
   const currentStepIndex = useMemo(() => {
-    if (!isActive || !playback.isPlaying) return undefined;
+    if (!pattern || !isActive || !playback.isPlaying) return undefined;
 
     const tokens = pattern.text.trim().split(/\s+/).filter(Boolean);
     const patternLength = tokens.length;
@@ -31,7 +49,7 @@ export function PatternRow({ patternId, onTriggerFill }: PatternRowProps) {
     if (patternLength === 0) return undefined;
 
     return playback.currentStep % patternLength;
-  }, [isActive, playback.isPlaying, playback.currentStep, pattern.text]);
+  }, [pattern, isActive, playback.isPlaying, playback.currentStep]);
 
   if (!pattern) return null;
 
@@ -84,6 +102,10 @@ export function PatternRow({ patternId, onTriggerFill }: PatternRowProps) {
     }
   };
 
+  const handleToggleIncludeInCycle = () => {
+    togglePatternIncludeInCycle(patternId);
+  };
+
   const getPadStyle = () => {
     if (isActive) {
       return 'bg-green-600 hover:bg-green-700 border-green-500 scale-105 shadow-lg shadow-green-500/50';
@@ -95,7 +117,26 @@ export function PatternRow({ patternId, onTriggerFill }: PatternRowProps) {
   };
 
   return (
-    <div className="flex items-end gap-3 p-2 -m-2 rounded-lg hover:bg-gray-800/50 transition-colors">
+    <div
+      className={`flex items-end gap-2 p-2 -m-2 rounded-lg hover:bg-gray-800/50 transition-all ${
+        isDragging ? 'opacity-50 scale-95' : ''
+      } ${isDraggedOver ? 'border-t-2 border-blue-500' : ''}`}
+      draggable
+      onDragStart={() => onDragStart(index)}
+      onDragOver={(e) => onDragOver(e, index)}
+      onDragEnd={onDragEnd}
+      onDrop={onDrop}
+    >
+      {/* Drag Handle */}
+      <div
+        className="flex-shrink-0 h-12 sm:h-14 flex items-center justify-center cursor-grab active:cursor-grabbing text-gray-600 hover:text-gray-400 transition-colors -ml-2 -mr-1"
+        aria-label="Drag to reorder"
+      >
+        <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 16 16">
+          <path d="M5 3a1 1 0 1 1 0-2 1 1 0 0 1 0 2zm6 0a1 1 0 1 1 0-2 1 1 0 0 1 0 2zM5 9a1 1 0 1 1 0-2 1 1 0 0 1 0 2zm6 0a1 1 0 1 1 0-2 1 1 0 0 1 0 2zm-6 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2zm6 0a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"/>
+        </svg>
+      </div>
+
       {/* Pattern Pad (Number Button) */}
       <button
         onClick={handlePadClick}
@@ -139,9 +180,54 @@ export function PatternRow({ patternId, onTriggerFill }: PatternRowProps) {
         />
       </div>
 
+      {/* Cycle Checkbox */}
+      <div className="flex-shrink-0">
+        <div className="flex items-end justify-center h-5 mb-1">
+          <label
+            htmlFor={`cycle-${patternId}`}
+            className={`text-xs transition-colors ${
+              isLoopMode ? 'text-gray-600' : 'text-gray-500'
+            }`}
+          >
+            Cycle
+          </label>
+        </div>
+        <div
+          className={`
+            flex items-center justify-center h-9 px-2 border-2 border-transparent
+            ${isLoopMode ? 'opacity-50' : 'opacity-100'}
+            transition-opacity
+          `}
+          title={
+            isLoopMode
+              ? 'Include this pattern when in Cycle mode'
+              : pattern.includeInCycle
+              ? 'This pattern is included in the cycle'
+              : 'This pattern is excluded from the cycle'
+          }
+        >
+          <input
+            type="checkbox"
+            id={`cycle-${patternId}`}
+            checked={pattern.includeInCycle ?? true}
+            onChange={handleToggleIncludeInCycle}
+            className={`
+              w-5 h-5 rounded cursor-pointer
+              transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500
+              ${isLoopMode
+                ? 'border-gray-700 text-gray-600'
+                : 'border-gray-600 text-blue-600'
+              }
+              bg-gray-800 border-2
+            `}
+            aria-label={`Include pattern ${patternId} in cycle mode`}
+          />
+        </div>
+      </div>
+
       {/* Repeat Input with custom +/- buttons */}
       <div className="flex-shrink-0">
-        <div className="flex items-center justify-center mb-1">
+        <div className="flex items-end justify-center h-5 mb-1">
           <label className="text-xs text-gray-500">Repeat</label>
         </div>
         <div
@@ -158,7 +244,7 @@ export function PatternRow({ patternId, onTriggerFill }: PatternRowProps) {
             onClick={decrementRepeat}
             disabled={(pattern.repeat ?? 2) <= 1}
             className={`
-              w-8 h-10 flex items-center justify-center text-lg font-bold
+              w-8 h-9 flex items-center justify-center text-lg font-bold
               transition-colors focus:outline-none
               ${isLoopMode
                 ? 'bg-gray-800 text-gray-600 hover:bg-gray-750 hover:text-gray-500'
@@ -177,7 +263,7 @@ export function PatternRow({ patternId, onTriggerFill }: PatternRowProps) {
             value={pattern.repeat ?? 2}
             onChange={handleRepeatChange}
             className={`
-              w-10 h-10 font-mono text-sm text-center border-0
+              w-10 h-9 font-mono text-sm text-center border-0
               focus:outline-none focus:ring-0
               [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none
               ${isLoopMode
@@ -190,7 +276,7 @@ export function PatternRow({ patternId, onTriggerFill }: PatternRowProps) {
             onClick={incrementRepeat}
             disabled={(pattern.repeat ?? 2) >= 99}
             className={`
-              w-8 h-10 flex items-center justify-center text-lg font-bold
+              w-8 h-9 flex items-center justify-center text-lg font-bold
               transition-colors focus:outline-none
               ${isLoopMode
                 ? 'bg-gray-800 text-gray-600 hover:bg-gray-750 hover:text-gray-500'
@@ -210,7 +296,7 @@ export function PatternRow({ patternId, onTriggerFill }: PatternRowProps) {
         onClick={handleRemove}
         disabled={currentSet.patterns.length <= 1}
         className={`
-          w-11 h-11 rounded-lg flex items-center justify-center
+          w-9 h-9 rounded-lg flex items-center justify-center
           transition-colors flex-shrink-0
           focus:outline-none focus:ring-2 focus:ring-red-500
           ${currentSet.patterns.length <= 1

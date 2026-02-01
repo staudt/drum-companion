@@ -30,6 +30,7 @@ export interface Pattern {
   bars: number;      // Number of bars (derived from steps)
   repeat: number;    // Number of times to repeat in Cycle mode (default 2)
   name?: string;     // Optional custom name (defaults to "Pattern <id>")
+  includeInCycle: boolean;  // Whether this pattern is included in cycle mode (default true)
 }
 
 // Feel types
@@ -50,5 +51,5 @@ export interface DrumSet {
   humanize: number;  // 0-1
   density: number;   // 0-1
   volume: number;    // 0-1
-  version?: number;  // For migration detection (V1 = undefined, V2 = 2)
+  version?: number;  // For migration detection (V1 = undefined, V2 = 2, V3 = 3)
 }

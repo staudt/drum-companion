@@ -20,8 +20,10 @@ export interface AppState {
   setPatternText: (patternId: number, text: string) => void;
   setPatternName: (patternId: number, name: string) => void;
   setPatternRepeat: (patternId: number, repeat: number) => void;
-  addPattern: () => void;  // Add new pattern (max 10)
+  togglePatternIncludeInCycle: (patternId: number) => void;
+  addPattern: () => void;  // Add new pattern
   removePattern: (patternId: number) => void;  // Remove pattern (min 1)
+  reorderPatterns: (fromIndex: number, toIndex: number) => void;  // Reorder patterns with auto-renumbering
   switchPattern: (patternId: number) => void;
 
   // Actions - Set properties
