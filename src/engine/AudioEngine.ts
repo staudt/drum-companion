@@ -162,6 +162,19 @@ export class AudioEngine {
   }
 
   /**
+   * Switch to a new pattern and reset to step 0
+   * Use this when switching between different patterns (not editing current pattern)
+   */
+  switchPattern(pattern: Step[]): void {
+    if (!this.initialized || !this.scheduler) {
+      console.warn('⚠️  Cannot switch pattern: engine not initialized');
+      return;
+    }
+
+    this.scheduler.switchPattern(pattern);
+  }
+
+  /**
    * Set callback for when each step plays (for UI feedback)
    */
   onStep(callback: (stepIndex: number) => void): void {

@@ -1,25 +1,63 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { parsePattern } from '../../parser/parsePattern';
 
 const MIN_PATTERN_STEPS = 2;
 const MAX_PATTERN_STEPS = 64;
 const DEBOUNCE_MS = 200; // Reduced from 500ms for faster live editing
 
+/**
+ * Calculate character start position for each step in the pattern text
+ * Example: "k h s h" → [0, 2, 4, 6]
+ * Example: "kh . sh ." → [0, 3, 5, 8]
+ */
+function calculateStepPositions(text: string): number[] {
+  const tokens = text.trim().split(/\s+/).filter(Boolean);
+  const positions: number[] = [];
+  let charPos = 0;
+
+  for (let i = 0; i < tokens.length; i++) {
+    positions.push(charPos);
+    charPos += tokens[i].length + 1; // +1 for space after token
+  }
+
+  return positions;
+}
+
 interface PatternInputProps {
   id: number;  // Pattern number 1-10
   text: string;
+  name?: string;  // Optional custom name
   isActive: boolean;
   isPending: boolean;
   isPlaying: boolean;
+  currentStepIndex?: number;  // 0-based step index currently playing (undefined when not playing)
   onChange: (text: string) => void;
+  onNameChange: (name: string) => void;
 }
 
-export function PatternInput({ id, text, isActive, isPending, isPlaying, onChange }: PatternInputProps) {
+export function PatternInput({ id, text, name, isActive, isPending, isPlaying, currentStepIndex, onChange, onNameChange }: PatternInputProps) {
   const [localText, setLocalText] = useState(text);
   const [isValid, setIsValid] = useState(true);
   const [validationError, setValidationError] = useState<string | null>(null);
   const [stepCount, setStepCount] = useState(0);
   const debounceTimerRef = useRef<number | null>(null);
+
+  // Split text into tokens with step indices and beat colors
+  const coloredTokens = useMemo(() => {
+    const tokens = localText.trim().split(/\s+/).filter(Boolean);
+    return tokens.map((token, stepIndex) => {
+      const beatIndex = Math.floor(stepIndex / 4);
+      const isEvenBeat = beatIndex % 2 === 0;
+      const isCurrentStep = stepIndex === currentStepIndex;
+
+      return {
+        token,
+        stepIndex,
+        isEvenBeat,
+        isCurrentStep,
+      };
+    });
+  }, [localText, currentStepIndex]);
 
   // Sync with external changes
   useEffect(() => {
@@ -101,14 +139,20 @@ export function PatternInput({ id, text, isActive, isPending, isPlaying, onChang
     <div className="space-y-1">
       <div className="flex items-center justify-between">
         <label className="text-sm font-semibold text-gray-300 flex items-center gap-2">
-          <span className={`
-            px-2 py-0.5 rounded text-xs font-bold
-            ${isActive ? 'bg-green-600 text-white' : ''}
-            ${isPending ? 'bg-yellow-600 text-white' : ''}
-            ${!isActive && !isPending ? 'bg-gray-700 text-gray-400' : ''}
-          `}>
-            {id}
-          </span>
+          <input
+            type="text"
+            value={name || `Pattern ${id}`}
+            onChange={(e) => onNameChange(e.target.value)}
+            className={`
+              px-2 py-0.5 rounded text-xs font-bold
+              border-0 focus:outline-none focus:ring-1 focus:ring-blue-500
+              w-auto max-w-[150px]
+              ${isActive ? 'bg-green-600 text-white placeholder-green-200' : ''}
+              ${isPending ? 'bg-yellow-600 text-white placeholder-yellow-200' : ''}
+              ${!isActive && !isPending ? 'bg-gray-700 text-gray-300 placeholder-gray-500' : ''}
+            `}
+            placeholder={`Pattern ${id}`}
+          />
           {isActive && isPlaying && (
             <span className="text-xs text-green-400">● Playing</span>
           )}
@@ -120,19 +164,42 @@ export function PatternInput({ id, text, isActive, isPending, isPlaying, onChang
           {isValid ? `${stepCount} steps` : validationError}
         </span>
       </div>
-      <input
-        type="text"
-        value={localText}
-        onChange={handleChange}
-        className={`
-          w-full px-3 py-2 rounded font-mono text-sm
-          focus:outline-none focus:ring-2 focus:ring-blue-500
-          transition-all border-2
-          ${getBgColor()}
-          ${getBorderColor()}
-        `}
-        placeholder="k h s h k h s h"
-      />
+      <div className="relative">
+        {/* Colored text overlay */}
+        <div
+          className="absolute inset-0 px-3 py-2 font-mono text-sm pointer-events-none overflow-hidden whitespace-pre"
+          aria-hidden="true"
+        >
+          {coloredTokens.map((item, idx) => (
+            <span key={idx}>
+              <span
+                className={`
+                  ${item.isCurrentStep ? 'text-green-400 font-bold' : item.isEvenBeat ? 'text-white' : 'text-gray-500'}
+                `}
+              >
+                {item.token}
+              </span>
+              {idx < coloredTokens.length - 1 && ' '}
+            </span>
+          ))}
+        </div>
+
+        {/* Actual input (transparent text) */}
+        <input
+          type="text"
+          value={localText}
+          onChange={handleChange}
+          className={`
+            w-full px-3 py-2 rounded font-mono text-sm
+            focus:outline-none focus:ring-2 focus:ring-blue-500
+            transition-all border-2
+            text-transparent caret-white
+            ${getBgColor()}
+            ${getBorderColor()}
+          `}
+          placeholder="k h s h k h s h"
+        />
+      </div>
     </div>
   );
 }

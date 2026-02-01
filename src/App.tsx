@@ -193,7 +193,7 @@ function App() {
     audioEngineRef.current.setDensity(currentSet.density);
   }, [currentSet.density]);
 
-  // Update audio engine when active pattern changes (text edit or pattern switch)
+  // Update audio engine when current pattern is edited
   useEffect(() => {
     if (!playback.isPlaying || !audioEngineRef.current) return;
 
@@ -203,6 +203,17 @@ function App() {
       audioEngineRef.current.updatePattern(activePattern.steps);
     }
   }, [currentSet.patterns, playback.currentPattern, playback.isPlaying]);
+
+  // Switch audio pattern when user switches to a different pattern
+  useEffect(() => {
+    if (!playback.isPlaying || !audioEngineRef.current) return;
+
+    const activePattern = currentSet.patterns.find(p => p.id === playback.currentPattern);
+    if (activePattern && activePattern.steps.length >= 2) {
+      console.log(`🔄 Switching to audio pattern ${playback.currentPattern}: ${activePattern.steps.length} steps`);
+      audioEngineRef.current.switchPattern(activePattern.steps);
+    }
+  }, [playback.currentPattern, playback.isPlaying]);
 
   // Cleanup on unmount
   useEffect(() => {

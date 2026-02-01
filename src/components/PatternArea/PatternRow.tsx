@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useAppStore } from '../../store/useAppStore';
 import { PatternInput } from '../PatternEditor/PatternInput';
 
@@ -11,6 +11,7 @@ export function PatternRow({ patternId, onTriggerFill }: PatternRowProps) {
   const currentSet = useAppStore((state) => state.currentSet);
   const playback = useAppStore((state) => state.playback);
   const setPatternText = useAppStore((state) => state.setPatternText);
+  const setPatternName = useAppStore((state) => state.setPatternName);
   const setPatternRepeat = useAppStore((state) => state.setPatternRepeat);
   const switchPattern = useAppStore((state) => state.switchPattern);
   const removePattern = useAppStore((state) => state.removePattern);
@@ -19,6 +20,18 @@ export function PatternRow({ patternId, onTriggerFill }: PatternRowProps) {
   const isActive = playback.currentPattern === patternId;
   const isPending = playback.nextPattern === patternId;
   const isLoopMode = (currentSet.playbackMode ?? 'loop') === 'loop';
+
+  // Calculate current step index for this pattern (if active and playing)
+  const currentStepIndex = useMemo(() => {
+    if (!isActive || !playback.isPlaying) return undefined;
+
+    const tokens = pattern.text.trim().split(/\s+/).filter(Boolean);
+    const patternLength = tokens.length;
+
+    if (patternLength === 0) return undefined;
+
+    return playback.currentStep % patternLength;
+  }, [isActive, playback.isPlaying, playback.currentStep, pattern.text]);
 
   if (!pattern) return null;
 
@@ -45,6 +58,10 @@ export function PatternRow({ patternId, onTriggerFill }: PatternRowProps) {
   const handlePatternChange = useCallback((text: string) => {
     setPatternText(patternId, text);
   }, [setPatternText, patternId]);
+
+  const handleNameChange = useCallback((name: string) => {
+    setPatternName(patternId, name);
+  }, [setPatternName, patternId]);
 
   const handleRepeatChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseInt(e.target.value, 10);
@@ -112,10 +129,13 @@ export function PatternRow({ patternId, onTriggerFill }: PatternRowProps) {
         <PatternInput
           id={patternId}
           text={pattern.text}
+          name={pattern.name}
           isActive={isActive}
           isPending={isPending}
           isPlaying={playback.isPlaying}
+          currentStepIndex={currentStepIndex}
           onChange={handlePatternChange}
+          onNameChange={handleNameChange}
         />
       </div>
 
@@ -130,20 +150,21 @@ export function PatternRow({ patternId, onTriggerFill }: PatternRowProps) {
             ${isLoopMode ? 'border-gray-700' : 'border-gray-600'}
           `}
           title={isLoopMode
-            ? 'Repeat count is ignored in Loop mode'
+            ? 'Repeat count is ignored in Loop mode (but you can still edit it for Cycle mode)'
             : 'Number of times to play this pattern before moving to next'
           }
         >
           <button
             onClick={decrementRepeat}
-            disabled={isLoopMode || (pattern.repeat ?? 2) <= 1}
+            disabled={(pattern.repeat ?? 2) <= 1}
             className={`
               w-8 h-10 flex items-center justify-center text-lg font-bold
               transition-colors focus:outline-none
               ${isLoopMode
-                ? 'bg-gray-800 text-gray-600 cursor-not-allowed'
+                ? 'bg-gray-800 text-gray-600 hover:bg-gray-750 hover:text-gray-500'
                 : 'bg-gray-700 text-gray-300 hover:bg-gray-600 hover:text-white'
               }
+              ${(pattern.repeat ?? 2) <= 1 ? 'cursor-not-allowed opacity-50' : ''}
             `}
             aria-label="Decrease repeat count"
           >
@@ -167,14 +188,15 @@ export function PatternRow({ patternId, onTriggerFill }: PatternRowProps) {
           />
           <button
             onClick={incrementRepeat}
-            disabled={isLoopMode || (pattern.repeat ?? 2) >= 99}
+            disabled={(pattern.repeat ?? 2) >= 99}
             className={`
               w-8 h-10 flex items-center justify-center text-lg font-bold
               transition-colors focus:outline-none
               ${isLoopMode
-                ? 'bg-gray-800 text-gray-600 cursor-not-allowed'
+                ? 'bg-gray-800 text-gray-600 hover:bg-gray-750 hover:text-gray-500'
                 : 'bg-gray-700 text-gray-300 hover:bg-gray-600 hover:text-white'
               }
+              ${(pattern.repeat ?? 2) >= 99 ? 'cursor-not-allowed opacity-50' : ''}
             `}
             aria-label="Increase repeat count"
           >

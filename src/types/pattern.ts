@@ -29,6 +29,7 @@ export interface Pattern {
   steps: Step[];     // Parsed steps
   bars: number;      // Number of bars (derived from steps)
   repeat: number;    // Number of times to repeat in Cycle mode (default 2)
+  name?: string;     // Optional custom name (defaults to "Pattern <id>")
 }
 
 // Feel types

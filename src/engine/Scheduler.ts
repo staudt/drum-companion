@@ -160,6 +160,30 @@ export class Scheduler {
   }
 
   /**
+   * Switch to a new pattern and reset step position to 0
+   * Use this when changing between different patterns (not editing current pattern)
+   */
+  switchPattern(pattern: Step[]): void {
+    if (pattern.length === 0) {
+      console.warn('⚠️  Cannot switch to empty pattern');
+      return;
+    }
+
+    console.log(`🔄 Pattern switched: ${this.pattern.length} → ${pattern.length} steps (resetting to step 0)`);
+    this.pattern = pattern;
+
+    // Reset to beginning of new pattern
+    this.currentStep = 0;
+
+    // Regenerate processed pattern with density
+    this.processedPattern = DensityGenerator.generateWithDensity(
+      this.pattern,
+      this.density,
+      this.currentBar
+    );
+  }
+
+  /**
    * Set callback for when each step plays
    */
   onStep(callback: (stepIndex: number) => void): void {

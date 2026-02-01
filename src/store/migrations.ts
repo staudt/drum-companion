@@ -48,12 +48,12 @@ export function patternLetterToNumber(letter: 'A' | 'B' | 'C' | 'D'): number {
  * Migrate a single DrumSet from V1 to V2
  */
 export function migrateDrumSetV1toV2(oldSet: DrumSetV1): DrumSet {
-  // Convert patterns from Record to Array, adding default repeat count
+  // Convert patterns from Record to Array, adding default repeat count and names
   const patterns: Pattern[] = [
-    { ...oldSet.patterns.A, id: 1, repeat: 2 },
-    { ...oldSet.patterns.B, id: 2, repeat: 2 },
-    { ...oldSet.patterns.C, id: 3, repeat: 2 },
-    { ...oldSet.patterns.D, id: 4, repeat: 2 },
+    { ...oldSet.patterns.A, id: 1, repeat: 2, name: 'Pattern 1' },
+    { ...oldSet.patterns.B, id: 2, repeat: 2, name: 'Pattern 2' },
+    { ...oldSet.patterns.C, id: 3, repeat: 2, name: 'Pattern 3' },
+    { ...oldSet.patterns.D, id: 4, repeat: 2, name: 'Pattern 4' },
   ];
 
   return {
@@ -141,6 +141,7 @@ export function createDefaultState(): Partial<AppState> {
       steps: [],  // Will be populated by parser
       bars: 1,
       repeat: 2,
+      name: 'Pattern 1',
     },
     {
       id: 2,
@@ -148,6 +149,7 @@ export function createDefaultState(): Partial<AppState> {
       steps: [],
       bars: 1,
       repeat: 2,
+      name: 'Pattern 2',
     },
     {
       id: 3,
@@ -155,6 +157,7 @@ export function createDefaultState(): Partial<AppState> {
       steps: [],
       bars: 1,
       repeat: 2,
+      name: 'Pattern 3',
     },
     {
       id: 4,
@@ -162,6 +165,7 @@ export function createDefaultState(): Partial<AppState> {
       steps: [],
       bars: 1,
       repeat: 2,
+      name: 'Pattern 4',
     },
   ];
 

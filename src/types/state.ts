@@ -18,6 +18,7 @@ export interface AppState {
 
   // Actions - Pattern management
   setPatternText: (patternId: number, text: string) => void;
+  setPatternName: (patternId: number, name: string) => void;
   setPatternRepeat: (patternId: number, repeat: number) => void;
   addPattern: () => void;  // Add new pattern (max 10)
   removePattern: (patternId: number) => void;  // Remove pattern (min 1)

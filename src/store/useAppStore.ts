@@ -14,7 +14,8 @@ const createDefaultPattern = (id: number, text: string): Pattern => {
     text,
     steps,
     bars: calculateBars(steps.length),
-    repeat: 2  // Default repeat count for cycle mode
+    repeat: 2,  // Default repeat count for cycle mode
+    name: `Pattern ${id}`  // Default name
   };
 };
 
@@ -84,6 +85,24 @@ export const useAppStore = create<AppState>()(
         });
       },
 
+      // Pattern name update
+      setPatternName: (patternId, name) => {
+        set((state) => {
+          const newPatterns = state.currentSet.patterns.map(p =>
+            p.id === patternId
+              ? { ...p, name }
+              : p
+          );
+
+          return {
+            currentSet: {
+              ...state.currentSet,
+              patterns: newPatterns
+            }
+          };
+        });
+      },
+
       // Set pattern repeat count
       setPatternRepeat: (patternId, repeat) => {
         set((state) => {
@@ -139,10 +158,16 @@ export const useAppStore = create<AppState>()(
           const filteredPatterns = patterns.filter(p => p.id !== patternId);
 
           // Renumber patterns sequentially (1, 2, 3, ...)
-          const renumberedPatterns = filteredPatterns.map((p, idx) => ({
-            ...p,
-            id: idx + 1
-          }));
+          // Also update default names if they match the pattern "Pattern <number>"
+          const renumberedPatterns = filteredPatterns.map((p, idx) => {
+            const newId = idx + 1;
+            const isDefaultName = !p.name || p.name.match(/^Pattern \d+$/);
+            return {
+              ...p,
+              id: newId,
+              name: isDefaultName ? `Pattern ${newId}` : p.name
+            };
+          });
 
           // Update current pattern if needed
           let newCurrentPattern = state.playback.currentPattern;
@@ -393,15 +418,36 @@ export const useAppStore = create<AppState>()(
       // Set management
       saveSet: (name) => {
         const state = get();
-        const newSet = {
-          ...state.currentSet,
-          id: crypto.randomUUID(),
-          name
-        };
 
-        set({
-          savedSets: [...state.savedSets, newSet]
-        });
+        // Check if a set with this name already exists
+        const existingSetIndex = state.savedSets.findIndex(s => s.name === name);
+
+        if (existingSetIndex !== -1) {
+          // Replace existing set with same name
+          const updatedSet = {
+            ...state.currentSet,
+            id: state.savedSets[existingSetIndex].id,  // Keep existing ID
+            name
+          };
+
+          const newSavedSets = [...state.savedSets];
+          newSavedSets[existingSetIndex] = updatedSet;
+
+          set({
+            savedSets: newSavedSets
+          });
+        } else {
+          // Create new set
+          const newSet = {
+            ...state.currentSet,
+            id: crypto.randomUUID(),
+            name
+          };
+
+          set({
+            savedSets: [...state.savedSets, newSet]
+          });
+        }
       },
 
       loadSet: (id) => {
