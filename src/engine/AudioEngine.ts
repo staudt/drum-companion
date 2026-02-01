@@ -60,7 +60,7 @@ export class AudioEngine {
   /**
    * Start playing a pattern
    */
-  play(pattern: Step[], bpm: number = 120): void {
+  async play(pattern: Step[], bpm: number = 120): Promise<void> {
     if (!this.initialized || !this.scheduler) {
       console.error('❌ Audio engine not initialized. Call initialize() first.');
       return;
@@ -73,7 +73,7 @@ export class AudioEngine {
 
     // Resume context if suspended (can happen after page becomes inactive)
     if (this.context?.state === 'suspended') {
-      this.context.resume();
+      await this.context.resume();
     }
 
     this.scheduler.start(pattern, bpm);

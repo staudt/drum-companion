@@ -180,7 +180,7 @@ export class FillGenerator {
       return [{ symbol: 't' as DrumSymbol, velocity: this.FILL_VELOCITY, offset: 0 }];
     } else if (progressInFill < quarter * 3) {
       // Third quarter: low toms + mid toms alternating
-      const symbol: DrumSymbol = progressInFill % 2 === 0 ? 'L' : 't';
+      const symbol: DrumSymbol = progressInFill % 2 === 0 ? 'f' : 't';
       return [{ symbol, velocity: this.FILL_VELOCITY, offset: 0 }];
     } else {
       // Final quarter: snare roll building to accent

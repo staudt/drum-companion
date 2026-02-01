@@ -55,7 +55,7 @@ export function PatternRow({ patternId, onTriggerFill }: PatternRowProps) {
   };
 
   return (
-    <div className="flex items-center gap-3 p-2 -m-2 rounded-lg hover:bg-gray-800/50 transition-colors">
+    <div className="flex items-end gap-3 p-2 -m-2 rounded-lg hover:bg-gray-800/50 transition-colors">
       {/* Pattern Pad (Number Button) */}
       <button
         onClick={handlePadClick}
@@ -96,20 +96,7 @@ export function PatternRow({ patternId, onTriggerFill }: PatternRowProps) {
         />
       </div>
 
-      {/* Dropdown Button (placeholder for future presets) */}
-      <button
-        disabled
-        className="w-11 h-11 rounded-lg bg-gray-700 text-gray-500
-          flex items-center justify-center
-          cursor-not-allowed opacity-50 flex-shrink-0"
-        title="Pattern presets coming soon"
-      >
-        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-          <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-        </svg>
-      </button>
-
-      {/* Remove Button */}
+      {/* Remove Button - aligned with pattern text box */}
       <button
         onClick={handleRemove}
         disabled={currentSet.patterns.length <= 1}

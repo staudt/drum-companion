@@ -15,7 +15,26 @@ export class SampleLoader {
   }
 
   /**
-   * Load a sprite sheet from audio file and sprite definition JSON
+   * Try to load and decode an audio file, returns null if it fails
+   */
+  private async tryLoadAudio(audioPath: string): Promise<AudioBuffer | null> {
+    try {
+      const audioResponse = await fetch(audioPath);
+      if (!audioResponse.ok) {
+        return null;
+      }
+
+      const arrayBuffer = await audioResponse.arrayBuffer();
+      const buffer = await this.context.decodeAudioData(arrayBuffer);
+      return buffer;
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Load a sprite sheet from audio file and sprite definition JSON.
+   * Tries OGG first, then falls back to MP3 for browser compatibility.
    */
   async loadSpriteSheet(audioPath: string, spritePath: string): Promise<void> {
     try {
@@ -27,18 +46,22 @@ export class SampleLoader {
       this.sprites = await spriteResponse.json();
       console.log('✅ Sprite definitions loaded:', Object.keys(this.sprites).length, 'samples');
 
-      // Load audio file
-      const audioResponse = await fetch(audioPath);
-      if (!audioResponse.ok) {
-        throw new Error(`Failed to load audio file: ${audioResponse.statusText}`);
+      // Try both formats (OGG first, then MP3 fallback)
+      const basePath = audioPath.replace(/\.(ogg|mp3)$/, '');
+      const formats = ['ogg', 'mp3'];
+
+      for (const format of formats) {
+        const path = `${basePath}.${format}`;
+        const buffer = await this.tryLoadAudio(path);
+        if (buffer) {
+          this.audioBuffer = buffer;
+          this.isLoaded = true;
+          console.log(`✅ Audio buffer loaded (${format}):`, buffer.duration.toFixed(2), 'seconds');
+          return;
+        }
       }
-      const arrayBuffer = await audioResponse.arrayBuffer();
 
-      // Decode audio data
-      this.audioBuffer = await this.context.decodeAudioData(arrayBuffer);
-      console.log('✅ Audio buffer loaded:', this.audioBuffer.duration.toFixed(2), 'seconds');
-
-      this.isLoaded = true;
+      throw new Error('Failed to load audio in any format');
     } catch (error) {
       console.error('❌ Failed to load sprite sheet:', error);
       throw error;

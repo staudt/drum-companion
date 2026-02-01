@@ -5,45 +5,39 @@ interface FeelSelectorProps {
   onChange: (feel: Feel) => void;
 }
 
-const FEEL_OPTIONS: Array<{ value: Feel; label: string; description: string }> = [
-  { value: 'straight', label: 'Straight', description: 'No swing' },
-  { value: 'swing', label: 'Swing', description: '~15% delay' },
-  { value: 'shuffle', label: 'Shuffle', description: '~25% delay' }
+const FEEL_OPTIONS: Array<{ value: Feel; label: string }> = [
+  { value: 'straight', label: 'Straight' },
+  { value: 'swing', label: 'Swing' },
+  { value: 'shuffle', label: 'Shuffle' }
 ];
 
 export function FeelSelector({ value, onChange }: FeelSelectorProps) {
-  const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    onChange(e.target.value as Feel);
-  };
-
-  const currentOption = FEEL_OPTIONS.find(opt => opt.value === value);
-
   return (
     <div className="space-y-2">
       <label className="text-sm font-semibold text-gray-300">
         Feel
       </label>
 
-      <select
-        value={value}
-        onChange={handleChange}
-        className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg
-          text-white text-sm
-          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
-          cursor-pointer hover:bg-gray-650 transition-colors"
-      >
+      <div className="flex gap-1">
         {FEEL_OPTIONS.map((option) => (
-          <option key={option.value} value={option.value}>
+          <button
+            key={option.value}
+            onClick={() => onChange(option.value)}
+            className={`
+              flex-1 px-2 py-1.5 text-xs font-medium rounded
+              transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500
+              ${value === option.value
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+              }
+            `}
+            aria-pressed={value === option.value}
+            title={`${option.label} feel${option.value === 'swing' ? ' (~15% delay)' : option.value === 'shuffle' ? ' (~25% delay)' : ''}`}
+          >
             {option.label}
-          </option>
+          </button>
         ))}
-      </select>
-
-      {currentOption && (
-        <p className="text-xs text-gray-500">
-          {currentOption.description}
-        </p>
-      )}
+      </div>
     </div>
   );
 }

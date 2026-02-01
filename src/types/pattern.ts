@@ -1,12 +1,12 @@
 // Drum symbols
-// k=kick, s=snare, h=hatClosed, H=hatOpen, c=crash, r=ride
-// t=midTom, T=hiTom, L=lowTom
-// p=clap, w=cowbell, m=tambourine, S=splash, x=china
+// k/B=kick (bass), s=snare, h/x=hatClosed, H=hatOpen, c=crash, r=ride
+// t=midTom, T=hiTom, f=lowTom (floor tom)
+// p=clap, w=cowbell, m=tambourine, S=splash, C=china
 // a=hiAgogo, A=lowAgogo
 export type DrumSymbol =
-  | 'k' | 's' | 'h' | 'H' | 'c' | 'r'
-  | 't' | 'T' | 'L'
-  | 'p' | 'w' | 'm' | 'S' | 'x'
+  | 'k' | 'B' | 's' | 'h' | 'x' | 'H' | 'c' | 'r'
+  | 't' | 'T' | 'f'
+  | 'p' | 'w' | 'm' | 'S' | 'C'
   | 'a' | 'A';
 
 // A single hit at a specific time

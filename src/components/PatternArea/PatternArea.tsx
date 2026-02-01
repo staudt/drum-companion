@@ -45,7 +45,7 @@ export function PatternArea({ onTriggerFill }: PatternAreaProps) {
         </div>
 
         {/* Add Pattern Button + Instructions */}
-        <div className="flex items-center gap-3 p-2">
+        <div className="flex items-center gap-3 p-2 -m-2 rounded-lg">
           <button
             onClick={handleAddPattern}
             disabled={!canAddPattern}
@@ -69,17 +69,16 @@ export function PatternArea({ onTriggerFill }: PatternAreaProps) {
           <div className="flex-1 text-xs text-gray-500 leading-relaxed">
             <p>
               <strong className="text-gray-400">Pattern Syntax:</strong>{' '}
-              <span className="text-blue-400">k</span>=kick{' '}
+              <span className="text-blue-400">.</span>=rest{' '}
+              <span className="text-blue-400">k/B</span>=kick{' '}
               <span className="text-blue-400">s</span>=snare{' '}
-              <span className="text-blue-400">h</span>=hat{' '}
+              <span className="text-blue-400">h/x</span>=hat{' '}
               <span className="text-blue-400">H</span>=open-hat{' '}
               <span className="text-blue-400">c</span>=crash{' '}
               <span className="text-blue-400">r</span>=ride{' '}
               <span className="text-blue-400">t</span>=tom{' '}
               <span className="text-blue-400">T</span>=hi-tom{' '}
-              <span className="text-blue-400">L</span>=low-tom{' '}
-              <span className="text-blue-400">.</span>=rest{' '}
-              <span className="text-gray-600">|</span>{' '}
+              <span className="text-blue-400">f</span>=floor-tom{' '}<br/>
               Use spaces to separate steps (each step = 16th note in 4/4 time)
             </p>
           </div>

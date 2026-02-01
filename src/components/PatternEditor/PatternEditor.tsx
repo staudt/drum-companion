@@ -40,13 +40,13 @@ export function PatternEditor() {
       </div>
 
       <p className="text-xs text-gray-500 mt-2">
-        <span className="text-blue-400">k</span>=kick{' '}
+        <span className="text-blue-400">k/B</span>=kick{' '}
         <span className="text-blue-400">s</span>=snare{' '}
-        <span className="text-blue-400">h</span>=hat{' '}
+        <span className="text-blue-400">h/x</span>=hat{' '}
         <span className="text-blue-400">H</span>=open-hat{' '}
         <span className="text-blue-400">c</span>=crash{' '}
         <span className="text-blue-400">r</span>=ride{' '}
-        <span className="text-blue-400">t</span>=tom{' '}
+        <span className="text-blue-400">t/T/f</span>=toms{' '}
         <span className="text-blue-400">.</span>=rest
       </p>
     </div>

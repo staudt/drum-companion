@@ -32,7 +32,7 @@ export function FillControls({ onTriggerFill, isPlaying }: FillControlsProps) {
         aria-label={isPlaying ? 'Trigger drum fill' : 'Play first to trigger fills'}
         title={isPlaying ? 'Trigger fill (or click active pattern pad)' : 'Play first to trigger fills'}
       >
-        🥁 FILL
+        FILL
       </button>
 
       {/* Fill on Switch Checkbox */}
@@ -41,10 +41,10 @@ export function FillControls({ onTriggerFill, isPlaying }: FillControlsProps) {
           type="checkbox"
           checked={fillOnSwitch}
           onChange={(e) => setFillOnSwitch(e.target.checked)}
-          className="w-5 h-5 rounded bg-gray-700 border-gray-600 text-orange-500
+          className="w-4 h-4 rounded bg-gray-700 border-gray-600 text-orange-500
             focus:ring-orange-500 focus:ring-offset-gray-900 cursor-pointer"
         />
-        <span>Fill when switch</span>
+        <span>Fill on Switch</span>
       </label>
     </div>
   );

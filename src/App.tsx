@@ -84,7 +84,7 @@ function App() {
       if (!activePattern) {
         throw new Error(`Pattern ${freshPlayback.currentPattern} not found`);
       }
-      engine.play(activePattern.steps, freshSet.bpm);
+      await engine.play(activePattern.steps, freshSet.bpm);
       engine.setFeel(freshSet.feel);
       engine.setHumanize(freshSet.humanize);
       engine.setDensity(freshSet.density);

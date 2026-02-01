@@ -101,26 +101,12 @@ export function BPMControl({
   };
 
   return (
-    <div className="flex items-center gap-4">
+    <div className="flex items-center gap-3">
       <label className="text-sm font-semibold text-gray-300 flex-shrink-0">
-        BPM:
+        BPM
       </label>
 
-      {/* BPM Slider */}
-      <input
-        type="range"
-        min={min}
-        max={max}
-        step={1}
-        value={value}
-        onChange={handleSliderChange}
-        className="flex-1 h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer
-          accent-blue-500 hover:accent-blue-400
-          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900"
-        aria-label={`BPM: ${value}`}
-      />
-
-      {/* Editable BPM number */}
+      {/* Editable BPM number - always visible as input box */}
       {isEditingNumber ? (
         <input
           type="number"
@@ -137,8 +123,8 @@ export function BPMControl({
       ) : (
         <button
           onClick={handleNumberClick}
-          className="text-lg font-bold text-blue-400 hover:text-blue-300 transition-colors
-            px-2 py-1 rounded hover:bg-gray-700 cursor-text min-w-[4rem] text-center flex-shrink-0"
+          className="w-16 px-2 py-1 text-lg font-bold text-blue-400 bg-gray-800 border border-gray-600 rounded
+            text-center hover:border-blue-500 hover:bg-gray-700 cursor-text flex-shrink-0 transition-colors"
           title="Click to edit BPM"
           aria-label={`BPM: ${value}, click to edit`}
         >
@@ -156,6 +142,20 @@ export function BPMControl({
       >
         TAP
       </button>
+
+      {/* BPM Slider - expands to fill available width */}
+      <input
+        type="range"
+        min={min}
+        max={max}
+        step={1}
+        value={value}
+        onChange={handleSliderChange}
+        className="flex-1 min-w-0 h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer
+          accent-blue-500 hover:accent-blue-400
+          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900"
+        aria-label={`BPM: ${value}`}
+      />
     </div>
   );
 }

@@ -58,16 +58,28 @@ Drum Companion lets you type drum patterns like `k h s h` (kick, hat, snare, hat
 ### Basic Symbols
 
 ```
-k  = kick drum
+k  = kick drum (also B for bass)
 s  = snare drum
-h  = closed hi-hat
+h  = closed hi-hat (also x)
 H  = open hi-hat
 c  = crash cymbal
 r  = ride cymbal
 t  = tom (mid)
 T  = hi-tom (high)
-L  = low-tom (floor)
+f  = low-tom (floor)
 .  = rest (silence)
+```
+
+### Additional Percussion
+
+```
+p  = clap
+w  = cowbell
+m  = tambourine
+S  = splash cymbal
+C  = china cymbal
+a  = hi agogo
+A  = low agogo
 ```
 
 ### Examples

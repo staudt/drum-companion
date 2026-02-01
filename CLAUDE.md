@@ -64,7 +64,7 @@ A **guitarist-focused drum companion web app** that allows musicians to quickly 
 
 **✅ Milestone 6: Fills**
 - FillGenerator with progressive fill algorithm
-- Extended DrumSymbol type with T (hiTom) and L (lowTom)
+- Extended DrumSymbol type with T (hiTom) and f (lowTom/floor tom)
 - Immediate partial fills (start from current step)
 - Kick pattern preservation (fills don't "kill" the groove)
 - Progressive build: sparse toms → denser toms → snare roll → crash
@@ -96,6 +96,11 @@ A **guitarist-focused drum companion web app** that allows musicians to quickly 
 - **Vitest configuration**: Tests don't run (config issue, not code issue). Parser logic is correct.
   - Can be debugged later or switched to manual testing
   - All features manually tested and working
+- **Firefox audio**: Audio playback not working in Firefox (works in Chrome/mobile)
+  - Attempted fixes: format fallback (OGG→MP3), async context.resume(), callback-based decodeAudioData
+  - Was working briefly after M7, unclear what broke it
+  - Needs deeper investigation into Firefox's Web Audio API behavior
+  - Low priority: Chrome and mobile are primary targets
 
 ---
 
@@ -116,13 +121,15 @@ A **guitarist-focused drum companion web app** that allows musicians to quickly 
 
 ### Pattern Syntax (v1 - Simple)
 ```
-k = kick, s = snare, h = closed hi-hat, H = open hi-hat
-c = crash, r = ride, t = tom, . = rest
+k/B = kick (bass), s = snare, h/x = closed hi-hat, H = open hi-hat
+c = crash, r = ride, t = midTom, T = hiTom, f = lowTom (floor), . = rest
+p = clap, w = cowbell, m = tambourine, S = splash, C = china
 
 Examples:
 k . s .           → Basic rock beat (4 steps)
 kh . sh .         → Kick+hat, rest, snare+hat, rest
 k . s . k k s .   → 8-step pattern with double kick
+Bx . sx .         → Same as above using B (bass) and x (hi-hat)
 ```
 
 **Time Signature**: 4/4 assumed, each space = one 16th note
