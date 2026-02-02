@@ -56,60 +56,67 @@ export function TopBar({
 
   return (
     <div className="bg-gray-800 border-b border-gray-700 p-4">
-      <div className="flex items-center gap-4">
-        {/* Mobile Hamburger (left of Play) */}
-        <HamburgerButton />
+      {/* Mobile: 3 rows | Desktop: 1 row with flex */}
+      <div className="grid grid-cols-1 lg:flex lg:items-center gap-4">
+        {/* Row 1 (mobile): Hamburger + Play + Fill */}
+        <div className="flex items-center gap-4">
+          {/* Mobile Hamburger (left of Play) */}
+          <HamburgerButton />
 
-        {/* Play/Stop Button */}
-        <button
-          onClick={isPlaying ? onStop : onPlay}
-          disabled={isLoading}
-          className={`
-            px-6 py-2 rounded-lg font-semibold text-white
-            focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900
-            transition-all duration-200 min-w-[100px] flex-shrink-0
-            ${isPlaying
-              ? 'bg-red-600 hover:bg-red-700 focus:ring-red-500'
-              : 'bg-green-600 hover:bg-green-700 focus:ring-green-500'
-            }
-            ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}
-          `}
-          aria-label={isLoading ? 'Loading...' : isPlaying ? 'Stop playback (Space)' : 'Start playback (Space)'}
-        >
-          {isLoading ? '⏳' : isPlaying ? '⏹ Stop' : '▶ Play'}
-        </button>
+          {/* Play/Stop Button */}
+          <button
+            onClick={isPlaying ? onStop : onPlay}
+            disabled={isLoading}
+            className={`
+              px-6 py-2 rounded-lg font-semibold text-white
+              focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900
+              transition-all duration-200 min-w-[100px] flex-shrink-0
+              ${isPlaying
+                ? 'bg-red-600 hover:bg-red-700 focus:ring-red-500'
+                : 'bg-green-600 hover:bg-green-700 focus:ring-green-500'
+              }
+              ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}
+            `}
+            aria-label={isLoading ? 'Loading...' : isPlaying ? 'Stop playback (Space)' : 'Start playback (Space)'}
+          >
+            {isLoading ? '⏳' : isPlaying ? '⏹ Stop' : '▶ Play'}
+          </button>
 
-        {/* Fill Button (smaller than Play) */}
-        <button
-          onClick={onTriggerFill}
-          disabled={!isPlaying}
-          className={`
-            px-3 py-2 rounded-lg font-medium text-sm
-            focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900
-            transition-all duration-200 flex-shrink-0
-            ${isPlaying
-              ? 'bg-orange-600 hover:bg-orange-700 text-white focus:ring-orange-500'
-              : 'bg-gray-700 text-gray-500 cursor-not-allowed'
-            }
-          `}
-          aria-label={isPlaying ? 'Trigger drum fill' : 'Play first to trigger fills'}
-          title={isPlaying ? 'Trigger fill (or click active pattern pad)' : 'Play first to trigger fills'}
-        >
-          Fill
-        </button>
+          {/* Fill Button (smaller than Play) */}
+          <button
+            onClick={onTriggerFill}
+            disabled={!isPlaying}
+            className={`
+              px-3 py-2 rounded-lg font-medium text-sm
+              focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900
+              transition-all duration-200 flex-shrink-0
+              ${isPlaying
+                ? 'bg-orange-600 hover:bg-orange-700 text-white focus:ring-orange-500'
+                : 'bg-gray-700 text-gray-500 cursor-not-allowed'
+              }
+            `}
+            aria-label={isPlaying ? 'Trigger drum fill' : 'Play first to trigger fills'}
+            title={isPlaying ? 'Trigger fill (or click active pattern pad)' : 'Play first to trigger fills'}
+          >
+            Fill
+          </button>
+        </div>
 
-        <div className="border-l border-gray-600 h-8" />
+        {/* Vertical divider (desktop only) */}
+        <div className="hidden lg:block border-l border-gray-600 h-8" />
 
-        <div className="flex-1 min-w-0">
+        {/* Row 2 (mobile): BPM controls */}
+        <div className="lg:flex-1 lg:min-w-0">
           <BPMControl
             value={currentSet.bpm}
             onChange={setBPM}
           />
         </div>
 
-        <div className="border-l border-gray-600 h-8" />
+        {/* Vertical divider (desktop only) */}
+        <div className="hidden lg:block border-l border-gray-600 h-8" />
 
-        {/* Set Name + Save (moved from top row) */}
+        {/* Row 3 (mobile): Set name + Save */}
         <PlaybackControls />
       </div>
     </div>

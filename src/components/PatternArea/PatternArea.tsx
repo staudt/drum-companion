@@ -80,7 +80,7 @@ export function PatternArea({ onTriggerFill }: PatternAreaProps) {
     <div className="flex-1 overflow-y-auto p-4">
       <div className="max-w-6xl mx-auto space-y-4">
         {/* Header */}
-        <div className="flex items-center justify-between sticky top-0 bg-gray-900 pb-4 z-10">
+        <div className="flex items-center justify-between bg-gray-900 pb-4">
           <h2 className="text-lg font-bold text-white">
             Patterns ({currentSet.patterns.length})
           </h2>
@@ -126,8 +126,8 @@ export function PatternArea({ onTriggerFill }: PatternAreaProps) {
           </div>
         </div>
 
-        {/* Column Headers */}
-        <div className="flex items-end gap-2 px-2 -mx-2 text-xs text-gray-500">
+        {/* Column Headers - Desktop only */}
+        <div className="hidden lg:flex items-end gap-2 px-2 -mx-2 text-xs text-gray-500">
           {/* Spacer for drag handle */}
           <div className="flex-shrink-0 w-3 -ml-2 -mr-1" aria-hidden="true" />
           {/* Spacer for pattern pad */}

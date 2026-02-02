@@ -118,190 +118,198 @@ export function PatternRow({
 
   return (
     <div
-      className={`flex items-end gap-2 p-2 -m-2 rounded-lg hover:bg-gray-800/50 transition-all ${
+      className={`grid grid-cols-1 lg:flex lg:items-end gap-2 p-2 -m-2 rounded-lg hover:bg-gray-800/50 transition-all ${
         isDragging ? 'opacity-50 scale-95' : ''
       } ${isDraggedOver ? 'border-t-2 border-blue-500' : ''}`}
       onDragOver={(e) => onDragOver(e, index)}
       onDrop={onDrop}
     >
-      {/* Drag Handle - spans full row height, only this is draggable */}
-      <div
-        className="flex-shrink-0 self-stretch flex items-center justify-center cursor-grab active:cursor-grabbing text-gray-600 hover:text-gray-400 transition-colors -ml-2 -mr-1 px-1"
-        aria-label="Drag to reorder"
-        draggable
-        onDragStart={() => onDragStart(index)}
-        onDragEnd={onDragEnd}
-      >
-        <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 16 16">
-          <path d="M5 3a1 1 0 1 1 0-2 1 1 0 0 1 0 2zm6 0a1 1 0 1 1 0-2 1 1 0 0 1 0 2zM5 9a1 1 0 1 1 0-2 1 1 0 0 1 0 2zm6 0a1 1 0 1 1 0-2 1 1 0 0 1 0 2zm-6 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2zm6 0a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"/>
-        </svg>
-      </div>
-
-      {/* Pattern Pad (Number Button) - matches full row height */}
-      <button
-        onClick={handlePadClick}
-        className={`
-          w-14 h-[66px] sm:w-16 sm:h-[66px] rounded-lg font-bold text-2xl
-          border-2 transition-all duration-200
-          focus:outline-none focus:ring-2 focus:ring-blue-500
-          flex-shrink-0 self-stretch
-          ${getPadStyle()}
-        `}
-        aria-label={
-          isActive
-            ? `Pattern ${patternId} - Active, click to trigger fill`
-            : isPending
-            ? `Pattern ${patternId} - Queued`
-            : `Switch to pattern ${patternId}`
-        }
-        title={
-          isActive
-            ? 'Active pattern - click to trigger fill'
-            : isPending
-            ? 'Queued pattern'
-            : 'Click to switch to this pattern'
-        }
-      >
-        {patternId}
-      </button>
-
-      {/* Pattern Input (fills remaining width) */}
-      <div className="flex-1">
-        <PatternInput
-          id={patternId}
-          text={pattern.text}
-          name={pattern.name}
-          isActive={isActive}
-          isPending={isPending}
-          isPlaying={playback.isPlaying}
-          currentStepIndex={currentStepIndex}
-          onChange={handlePatternChange}
-          onNameChange={handleNameChange}
-        />
-      </div>
-
-      {/* Cycle Checkbox - centered with pattern textbox */}
-      <div
-        className={`
-          flex-shrink-0 flex items-center justify-center px-2 mb-2
-          ${isLoopMode ? 'opacity-50' : 'opacity-100'}
-          transition-opacity
-        `}
-        title={
-          isLoopMode
-            ? 'Include this pattern when in Cycle mode'
-            : pattern.includeInCycle
-            ? 'This pattern is included in the cycle'
-            : 'This pattern is excluded from the cycle'
-        }
-      >
-        <input
-          type="checkbox"
-          id={`cycle-${patternId}`}
-          checked={pattern.includeInCycle ?? true}
-          onChange={handleToggleIncludeInCycle}
-          className={`
-            w-5 h-5 rounded cursor-pointer
-            transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500
-            ${isLoopMode
-              ? 'border-gray-700 text-gray-600'
-              : 'border-gray-600 text-blue-600'
-            }
-            bg-gray-800 border-2
-          `}
-          aria-label={`Include pattern ${patternId} in cycle mode`}
-        />
-      </div>
-
-      {/* Repeat Input with custom +/- buttons */}
-      <div
-        className={`
-          flex-shrink-0 flex items-center rounded border-2 overflow-hidden
-          ${isLoopMode ? 'border-gray-700' : 'border-gray-600'}
-        `}
-        title={isLoopMode
-          ? 'Repeat count is ignored in Loop mode (but you can still edit it for Cycle mode)'
-          : 'Number of times to play this pattern before moving to next'
-        }
-      >
-        <button
-          onClick={decrementRepeat}
-          disabled={(pattern.repeat ?? 2) <= 1}
-          className={`
-            w-8 h-9 flex items-center justify-center text-lg font-bold
-            transition-colors focus:outline-none
-            ${isLoopMode
-              ? 'bg-gray-800 text-gray-600 hover:bg-gray-750 hover:text-gray-500'
-              : 'bg-gray-700 text-gray-300 hover:bg-gray-600 hover:text-white'
-            }
-            ${(pattern.repeat ?? 2) <= 1 ? 'cursor-not-allowed opacity-50' : ''}
-          `}
-          aria-label="Decrease repeat count"
+      {/* Row 1 (mobile): Drag + Pad + PatternInput */}
+      <div className="flex items-end gap-2 lg:contents">
+        {/* Drag Handle - desktop only, hidden on mobile */}
+        <div
+          className="hidden lg:flex flex-shrink-0 self-stretch items-center justify-center cursor-grab active:cursor-grabbing text-gray-600 hover:text-gray-400 transition-colors -ml-2 -mr-1 px-1"
+          aria-label="Drag to reorder"
+          draggable
+          onDragStart={() => onDragStart(index)}
+          onDragEnd={onDragEnd}
         >
-          −
-        </button>
-        <input
-          type="number"
-          min={1}
-          max={99}
-          value={pattern.repeat ?? 2}
-          onChange={handleRepeatChange}
-          className={`
-            w-10 h-9 font-mono text-sm text-center border-0
-            focus:outline-none focus:ring-0
-            [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none
-            ${isLoopMode
-              ? 'bg-gray-800 text-gray-500'
-              : 'bg-gray-800 text-white'
-            }
-          `}
-        />
-        <button
-          onClick={incrementRepeat}
-          disabled={(pattern.repeat ?? 2) >= 99}
-          className={`
-            w-8 h-9 flex items-center justify-center text-lg font-bold
-            transition-colors focus:outline-none
-            ${isLoopMode
-              ? 'bg-gray-800 text-gray-600 hover:bg-gray-750 hover:text-gray-500'
-              : 'bg-gray-700 text-gray-300 hover:bg-gray-600 hover:text-white'
-            }
-            ${(pattern.repeat ?? 2) >= 99 ? 'cursor-not-allowed opacity-50' : ''}
-          `}
-          aria-label="Increase repeat count"
-        >
-          +
-        </button>
-      </div>
+          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 16 16">
+            <path d="M5 3a1 1 0 1 1 0-2 1 1 0 0 1 0 2zm6 0a1 1 0 1 1 0-2 1 1 0 0 1 0 2zM5 9a1 1 0 1 1 0-2 1 1 0 0 1 0 2zm6 0a1 1 0 1 1 0-2 1 1 0 0 1 0 2zm-6 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2zm6 0a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"/>
+          </svg>
+        </div>
 
-      {/* Remove Button - aligned with pattern text box */}
-      <button
-        onClick={handleRemove}
-        disabled={currentSet.patterns.length <= 1}
-        className={`
-          w-9 h-9 rounded-lg flex items-center justify-center
-          transition-colors flex-shrink-0
-          focus:outline-none focus:ring-2 focus:ring-red-500
-          ${currentSet.patterns.length <= 1
-            ? 'bg-gray-800 text-gray-600 cursor-not-allowed'
-            : 'bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white'
+        {/* Pattern Pad (Number Button) - matches full row height */}
+        <button
+          onClick={handlePadClick}
+          className={`
+            w-14 h-[66px] sm:w-16 sm:h-[66px] rounded-lg font-bold text-2xl
+            border-2 transition-all duration-200
+            focus:outline-none focus:ring-2 focus:ring-blue-500
+            flex-shrink-0 self-stretch
+            ${getPadStyle()}
+          `}
+          aria-label={
+            isActive
+              ? `Pattern ${patternId} - Active, click to trigger fill`
+              : isPending
+              ? `Pattern ${patternId} - Queued`
+              : `Switch to pattern ${patternId}`
           }
-        `}
-        aria-label={
-          currentSet.patterns.length <= 1
-            ? 'Cannot remove last pattern'
-            : `Remove pattern ${patternId}`
-        }
-        title={
-          currentSet.patterns.length <= 1
-            ? 'Cannot remove last pattern'
-            : `Remove pattern ${patternId}`
-        }
-      >
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-        </svg>
-      </button>
+          title={
+            isActive
+              ? 'Active pattern - click to trigger fill'
+              : isPending
+              ? 'Queued pattern'
+              : 'Click to switch to this pattern'
+          }
+        >
+          {patternId}
+        </button>
+
+        {/* Pattern Input (fills remaining width) */}
+        <div className="flex-1">
+          <PatternInput
+            id={patternId}
+            text={pattern.text}
+            name={pattern.name}
+            isActive={isActive}
+            isPending={isPending}
+            isPlaying={playback.isPlaying}
+            currentStepIndex={currentStepIndex}
+            onChange={handlePatternChange}
+            onNameChange={handleNameChange}
+          />
+        </div>
+      </div>
+
+      {/* Row 2 (mobile): Cycle + Repeat + Remove - Aligned after pad */}
+      <div className="flex items-center gap-2 pl-16 lg:pl-0 lg:contents">
+        {/* Cycle Checkbox with label - centered with pattern textbox on desktop */}
+        <label
+          htmlFor={`cycle-${patternId}`}
+          className={`
+            flex-shrink-0 flex items-center gap-1.5 px-2 lg:justify-center lg:mb-2 cursor-pointer
+            ${isLoopMode ? 'opacity-50' : 'opacity-100'}
+            transition-opacity
+          `}
+          title={
+            isLoopMode
+              ? 'Include this pattern when in Cycle mode'
+              : pattern.includeInCycle
+              ? 'This pattern is included in the cycle'
+              : 'This pattern is excluded from the cycle'
+          }
+        >
+          <input
+            type="checkbox"
+            id={`cycle-${patternId}`}
+            checked={pattern.includeInCycle ?? true}
+            onChange={handleToggleIncludeInCycle}
+            className={`
+              w-5 h-5 rounded cursor-pointer
+              transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500
+              ${isLoopMode
+                ? 'border-gray-700 text-gray-600'
+                : 'border-gray-600 text-blue-600'
+              }
+              bg-gray-800 border-2
+            `}
+            aria-label={`Include pattern ${patternId} in cycle mode`}
+          />
+          <span className="text-xs text-gray-400 lg:hidden">Cycle</span>
+        </label>
+
+        {/* Repeat Input with custom +/- buttons */}
+        <div
+          className={`
+            flex-shrink-0 flex items-center rounded border-2 overflow-hidden
+            ${isLoopMode ? 'border-gray-700' : 'border-gray-600'}
+          `}
+          title={isLoopMode
+            ? 'Repeat count is ignored in Loop mode (but you can still edit it for Cycle mode)'
+            : 'Number of times to play this pattern before moving to next'
+          }
+        >
+          <button
+            onClick={decrementRepeat}
+            disabled={(pattern.repeat ?? 2) <= 1}
+            className={`
+              w-8 h-9 flex items-center justify-center text-lg font-bold
+              transition-colors focus:outline-none
+              ${isLoopMode
+                ? 'bg-gray-800 text-gray-600 hover:bg-gray-750 hover:text-gray-500'
+                : 'bg-gray-700 text-gray-300 hover:bg-gray-600 hover:text-white'
+              }
+              ${(pattern.repeat ?? 2) <= 1 ? 'cursor-not-allowed opacity-50' : ''}
+            `}
+            aria-label="Decrease repeat count"
+          >
+            −
+          </button>
+          <input
+            type="number"
+            min={1}
+            max={99}
+            value={pattern.repeat ?? 2}
+            onChange={handleRepeatChange}
+            className={`
+              w-10 h-9 font-mono text-sm text-center border-0
+              focus:outline-none focus:ring-0
+              [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none
+              ${isLoopMode
+                ? 'bg-gray-800 text-gray-500'
+                : 'bg-gray-800 text-white'
+              }
+            `}
+          />
+          <button
+            onClick={incrementRepeat}
+            disabled={(pattern.repeat ?? 2) >= 99}
+            className={`
+              w-8 h-9 flex items-center justify-center text-lg font-bold
+              transition-colors focus:outline-none
+              ${isLoopMode
+                ? 'bg-gray-800 text-gray-600 hover:bg-gray-750 hover:text-gray-500'
+                : 'bg-gray-700 text-gray-300 hover:bg-gray-600 hover:text-white'
+              }
+              ${(pattern.repeat ?? 2) >= 99 ? 'cursor-not-allowed opacity-50' : ''}
+            `}
+            aria-label="Increase repeat count"
+          >
+            +
+          </button>
+        </div>
+
+        {/* Remove Button - aligned with pattern text box */}
+        <button
+          onClick={handleRemove}
+          disabled={currentSet.patterns.length <= 1}
+          className={`
+            w-9 h-9 rounded-lg flex items-center justify-center
+            transition-colors flex-shrink-0
+            focus:outline-none focus:ring-2 focus:ring-red-500
+            ${currentSet.patterns.length <= 1
+              ? 'bg-gray-800 text-gray-600 cursor-not-allowed'
+              : 'bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white'
+            }
+          `}
+          aria-label={
+            currentSet.patterns.length <= 1
+              ? 'Cannot remove last pattern'
+              : `Remove pattern ${patternId}`
+          }
+          title={
+            currentSet.patterns.length <= 1
+              ? 'Cannot remove last pattern'
+              : `Remove pattern ${patternId}`
+          }
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
     </div>
   );
 }
