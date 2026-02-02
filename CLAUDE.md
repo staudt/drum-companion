@@ -14,7 +14,24 @@ A **guitarist-focused drum companion web app** that allows musicians to quickly 
 
 ---
 
-## Current Status (Milestone 7 Complete ✅)
+## Current Status (Milestone 7 Complete ✅ + Firebase Deployed 🚀)
+
+### Live Deployment
+
+**🌐 Production URL**: https://typeabeat-32a5.web.app
+**🔥 Firebase Project**: typeabeat-32a5
+**📦 Hosting**: Firebase Hosting (auto-deployed from `dist/`)
+
+**Deployment Commands**:
+```bash
+npm run build && firebase deploy --only hosting  # Build & deploy
+firebase deploy --only hosting                   # Deploy only (if already built)
+```
+
+**Configuration Files**:
+- `firebase.json` - Hosting configuration (serves from dist/, SPA rewrites)
+- `.firebaserc` - Project ID configuration
+- `.gitignore` - Protects Firebase cache and debug logs
 
 ### Completed Milestones
 
@@ -114,6 +131,7 @@ A **guitarist-focused drum companion web app** that allows musicians to quickly 
 | State | Zustand + persist | Lightweight, minimal boilerplate |
 | Styling | Tailwind CSS | Rapid prototyping, utility-first |
 | Storage | localStorage | Simple, no backend needed |
+| Hosting | Firebase Hosting | Fast CDN, auto-SSL, SPA support |
 
 ---
 
@@ -223,6 +241,9 @@ c:/git/drum/
 ├── tsconfig.json                ✅ TypeScript config
 ├── tailwind.config.js           ✅ Tailwind config
 ├── vitest.config.ts             ⚠️  Needs debugging
+├── firebase.json                ✅ Firebase Hosting config
+├── .firebaserc                  ✅ Firebase project ID (typeabeat-32a5)
+├── .gitignore                   ✅ Protects Firebase cache & debug logs
 ├── CLAUDE.md                    ✅ AI context & plan
 └── README.md                    ✅ User documentation
 ```
@@ -558,10 +579,12 @@ if (isBarBoundary) {
 ## Development Commands
 
 ```bash
-npm run dev      # Start dev server
-npm run build    # Build for production
-npm run preview  # Preview production build
-npm test         # Run tests (currently broken, needs fix)
+npm run dev                                    # Start dev server
+npm run build                                  # Build for production
+npm run preview                                # Preview production build
+npm test                                       # Run tests (currently broken, needs fix)
+npm run build && firebase deploy --only hosting  # Build & deploy to Firebase
+firebase deploy --only hosting                   # Deploy to Firebase (if already built)
 ```
 
 ---
@@ -632,13 +655,15 @@ When resuming work in a new session:
 
 ## Contact & Resources
 
+- **Live App**: https://typeabeat-32a5.web.app
+- **Firebase Console**: https://console.firebase.google.com/project/typeabeat-32a5
 - **Drum kit**: User-provided sprite sheet at `public/samples/kit-default/`
 - **Plan file**: `C:\Users\Ricardo\.claude\plans\sorted-bubbling-pretzel.md`
-- **Working directory**: `c:\git\drum-companion`
+- **Working directory**: `c:\git\drum`
 - **Dev server**: `http://localhost:5173` or `http://localhost:5174`
 
 ---
 
-**Last Updated**: 2026-01-31 (Milestone 7 Complete ✅)
+**Last Updated**: 2026-02-01 (Milestone 7 Complete ✅ + Firebase Deployed 🚀)
 **Current Milestone**: M7 Complete ✅ | Next: M8 (Export/Import, Pattern Templates)
-**Status**: UI refactor complete! Sidebar layout with dynamic patterns (1-10), full state migration, responsive design, and accessibility features all working. Ready for M8 (export/import, templates). 🥁
+**Status**: UI refactor complete! Sidebar layout with dynamic patterns (1-10), full state migration, responsive design, and accessibility features all working. **NOW LIVE** on Firebase Hosting! Ready for M8 (export/import, templates). 🥁

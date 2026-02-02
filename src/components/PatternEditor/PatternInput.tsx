@@ -5,24 +5,6 @@ const MIN_PATTERN_STEPS = 2;
 const MAX_PATTERN_STEPS = 64;
 const DEBOUNCE_MS = 200; // Reduced from 500ms for faster live editing
 
-/**
- * Calculate character start position for each step in the pattern text
- * Example: "k h s h" → [0, 2, 4, 6]
- * Example: "kh . sh ." → [0, 3, 5, 8]
- */
-function calculateStepPositions(text: string): number[] {
-  const tokens = text.trim().split(/\s+/).filter(Boolean);
-  const positions: number[] = [];
-  let charPos = 0;
-
-  for (let i = 0; i < tokens.length; i++) {
-    positions.push(charPos);
-    charPos += tokens[i].length + 1; // +1 for space after token
-  }
-
-  return positions;
-}
-
 interface PatternInputProps {
   id: number;  // Pattern number 1-10
   text: string;

@@ -6,11 +6,16 @@ export function PatternEditor() {
   const currentSet = useAppStore((state) => state.currentSet);
   const playback = useAppStore((state) => state.playback);
   const setPatternText = useAppStore((state) => state.setPatternText);
+  const setPatternName = useAppStore((state) => state.setPatternName);
 
   // Create stable onChange callbacks for each pattern to prevent debounce resets
   const createOnChange = useCallback((patternId: number) => {
     return (text: string) => setPatternText(patternId, text);
   }, [setPatternText]);
+
+  const createOnNameChange = useCallback((patternId: number) => {
+    return (name: string) => setPatternName(patternId, name);
+  }, [setPatternName]);
 
   return (
     <div className="space-y-3">
@@ -31,10 +36,12 @@ export function PatternEditor() {
             key={pattern.id}
             id={pattern.id}
             text={pattern.text}
+            name={pattern.name}
             isActive={playback.currentPattern === pattern.id}
             isPending={playback.nextPattern === pattern.id}
             isPlaying={playback.isPlaying}
             onChange={createOnChange(pattern.id)}
+            onNameChange={createOnNameChange(pattern.id)}
           />
         ))}
       </div>

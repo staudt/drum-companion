@@ -7,7 +7,6 @@ import { TopBar } from './components/TopBar/TopBar';
 import { PatternArea } from './components/PatternArea/PatternArea';
 
 function App() {
-  const [isInitialized, setIsInitialized] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -22,13 +21,9 @@ function App() {
   const stop = useAppStore((state) => state.stop);
   const setBPM = useAppStore((state) => state.setBPM);
   const setFeel = useAppStore((state) => state.setFeel);
-  const setHumanize = useAppStore((state) => state.setHumanize);
-  const setDensity = useAppStore((state) => state.setDensity);
-  const setVolume = useAppStore((state) => state.setVolume);
   const switchPattern = useAppStore((state) => state.switchPattern);
   const updatePlaybackState = useAppStore((state) => state.updatePlaybackState);
   const applyPendingPatternSwitch = useAppStore((state) => state.applyPendingPatternSwitch);
-  const handlePatternLoop = useAppStore((state) => state.handlePatternLoop);
   const setUIState = useAppStore((state) => state.setUIState);
 
   // Collapse sidebar on small screens at startup
@@ -69,7 +64,6 @@ function App() {
       });
 
       audioEngineRef.current = engine;
-      setIsInitialized(true);
       console.log('🎵 Audio engine ready!');
     } catch (err) {
       console.error('Failed to initialize audio:', err);

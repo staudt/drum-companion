@@ -95,6 +95,12 @@ k h s h k h sh h      → Full 8-step rock groove
 **Time Signature**: 4/4 assumed
 **Resolution**: Each space = one 16th note
 
+## Live Demo
+
+**🌐 Live App**: [https://typeabeat-32a5.web.app](https://typeabeat-32a5.web.app)
+
+Try it now - no installation required!
+
 ## Getting Started
 
 ### Prerequisites
@@ -191,6 +197,24 @@ npm run build      # Build for production
 npm run preview    # Preview production build
 npm test           # Run tests (Vitest)
 ```
+
+### Deployment
+
+The app is deployed on Firebase Hosting. To deploy updates:
+
+```bash
+# Build and deploy in one command
+npm run build && firebase deploy --only hosting
+
+# Or deploy if already built
+firebase deploy --only hosting
+```
+
+**Firebase Configuration**:
+- **Hosting URL**: https://typeabeat-32a5.web.app
+- **Project ID**: typeabeat-32a5
+- **Build Directory**: `dist/`
+- **Config Files**: [firebase.json](firebase.json), [.firebaserc](.firebaserc)
 
 ### Architecture
 
@@ -292,6 +316,8 @@ MIT (or your preferred license)
 
 ---
 
-**Status**: Milestone 7 Complete ✅ | Modern sidebar layout with dynamic patterns (1-10), fills, humanize, density all working! 🥁
+**Status**: Milestone 7 Complete ✅ + Firebase Deployed 🚀 | **LIVE** at [typeabeat-32a5.web.app](https://typeabeat-32a5.web.app)
+
+Modern sidebar layout with dynamic patterns (1-10), fills, humanize, density all working! 🥁
 
 For detailed technical documentation, see [CLAUDE.md](CLAUDE.md)

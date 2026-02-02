@@ -1,8 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { Pattern, DrumSet, Feel, PlaybackMode } from '../types/pattern';
+import type { Pattern, DrumSet } from '../types/pattern';
 import type { AppState } from '../types/state';
-import type { PlaybackState } from '../types/audio';
 import { parsePattern, calculateBars } from '../parser/parsePattern';
 import {
   migrateStateV1toV2,
@@ -262,7 +261,7 @@ export const useAppStore = create<AppState>()(
 
           // Track which pattern moved where
           const oldIdToNewId = new Map<number, number>();
-          renumberedPatterns.forEach((p, idx) => {
+          renumberedPatterns.forEach((p) => {
             const oldPattern = state.currentSet.patterns.find(old => old.text === p.text && old.name === p.name);
             if (oldPattern) {
               oldIdToNewId.set(oldPattern.id, p.id);

@@ -6,3 +6,12 @@ dist/
 .DS_Store
 .vscode/
 .idea/
+
+# Firebase cache and debug logs
+.firebase/
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+
+# Optional: Uncomment to allow different developers to use different Firebase projects
+# .firebaserc
