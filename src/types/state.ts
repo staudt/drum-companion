@@ -21,6 +21,7 @@ export interface AppState {
   setPatternName: (patternId: number, name: string) => void;
   setPatternRepeat: (patternId: number, repeat: number) => void;
   togglePatternIncludeInCycle: (patternId: number) => void;
+  setAllPatternsIncludeInCycle: (value: boolean) => void;
   addPattern: () => void;  // Add new pattern
   removePattern: (patternId: number) => void;  // Remove pattern (min 1)
   reorderPatterns: (fromIndex: number, toIndex: number) => void;  // Reorder patterns with auto-renumbering

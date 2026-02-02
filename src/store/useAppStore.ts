@@ -149,6 +149,19 @@ export const useAppStore = create<AppState>()(
         });
       },
 
+      // Set all patterns includeInCycle flag (bulk toggle)
+      setAllPatternsIncludeInCycle: (value) => {
+        set((state) => ({
+          currentSet: {
+            ...state.currentSet,
+            patterns: state.currentSet.patterns.map(p => ({
+              ...p,
+              includeInCycle: value
+            }))
+          }
+        }));
+      },
+
       // Add new pattern
       addPattern: () => {
         set((state) => {

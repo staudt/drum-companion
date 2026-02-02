@@ -41,6 +41,15 @@ export function PatternInput({ id, text, name, isActive, isPending, isPlaying, c
   const [validationError, setValidationError] = useState<string | null>(null);
   const [stepCount, setStepCount] = useState(0);
   const debounceTimerRef = useRef<number | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const overlayRef = useRef<HTMLDivElement>(null);
+
+  // Sync overlay scroll with input scroll
+  const handleScroll = () => {
+    if (inputRef.current && overlayRef.current) {
+      overlayRef.current.scrollLeft = inputRef.current.scrollLeft;
+    }
+  };
 
   // Split text into tokens with step indices and beat colors
   const coloredTokens = useMemo(() => {
@@ -115,6 +124,8 @@ export function PatternInput({ id, text, name, isActive, isPending, isPlaying, c
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setLocalText(e.target.value);
+    // Sync scroll after text change
+    requestAnimationFrame(handleScroll);
   };
 
   // Border color based on state
@@ -165,9 +176,11 @@ export function PatternInput({ id, text, name, isActive, isPending, isPlaying, c
         </span>
       </div>
       <div className="relative">
-        {/* Colored text overlay */}
+        {/* Colored text overlay - syncs scroll with input */}
         <div
-          className="absolute inset-0 px-3 py-2 font-mono text-sm pointer-events-none overflow-hidden whitespace-pre"
+          ref={overlayRef}
+          className="absolute inset-0 px-3 py-2 font-mono text-sm pointer-events-none overflow-x-auto overflow-y-hidden whitespace-pre scrollbar-none"
+          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
           aria-hidden="true"
         >
           {coloredTokens.map((item, idx) => (
@@ -186,14 +199,17 @@ export function PatternInput({ id, text, name, isActive, isPending, isPlaying, c
 
         {/* Actual input (transparent text) */}
         <input
+          ref={inputRef}
           type="text"
           value={localText}
           onChange={handleChange}
+          onScroll={handleScroll}
           className={`
             w-full px-3 py-2 rounded font-mono text-sm
             focus:outline-none focus:ring-2 focus:ring-blue-500
             transition-all border-2
             text-transparent caret-white
+            selection:bg-blue-500/40 selection:text-transparent
             ${getBgColor()}
             ${getBorderColor()}
           `}

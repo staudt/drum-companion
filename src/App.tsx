@@ -29,6 +29,15 @@ function App() {
   const updatePlaybackState = useAppStore((state) => state.updatePlaybackState);
   const applyPendingPatternSwitch = useAppStore((state) => state.applyPendingPatternSwitch);
   const handlePatternLoop = useAppStore((state) => state.handlePatternLoop);
+  const setUIState = useAppStore((state) => state.setUIState);
+
+  // Collapse sidebar on small screens at startup
+  useEffect(() => {
+    const isSmallScreen = window.innerWidth < 1024; // lg breakpoint
+    if (isSmallScreen) {
+      setUIState({ sidebarOpen: false });
+    }
+  }, []); // Run once on mount
 
   // Initialize audio engine
   const initializeAudio = async () => {
@@ -299,6 +308,7 @@ function App() {
           isLoading={isLoading}
           onPlay={handlePlay}
           onStop={handleStop}
+          onTriggerFill={handleTriggerFill}
         />
 
         {/* Status Messages (if any) */}

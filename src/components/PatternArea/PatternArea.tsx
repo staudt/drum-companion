@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useAppStore } from '../../store/useAppStore';
 import { PatternRow } from './PatternRow';
 import type { PlaybackMode } from '../../types/pattern';
@@ -13,19 +13,33 @@ export function PatternArea({ onTriggerFill }: PatternAreaProps) {
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
   const currentSet = useAppStore((state) => state.currentSet);
-  const playback = useAppStore((state) => state.playback);
   const addPattern = useAppStore((state) => state.addPattern);
   const setPlaybackMode = useAppStore((state) => state.setPlaybackMode);
   const reorderPatterns = useAppStore((state) => state.reorderPatterns);
+  const setAllPatternsIncludeInCycle = useAppStore((state) => state.setAllPatternsIncludeInCycle);
+
+  // Master cycle checkbox ref for indeterminate state
+  const masterCycleRef = useRef<HTMLInputElement>(null);
+
+  // Compute cycle checkbox states
+  const allCycleChecked = currentSet.patterns.every(p => p.includeInCycle !== false);
+  const noneCycleChecked = currentSet.patterns.every(p => p.includeInCycle === false);
+  const isCycleIndeterminate = !allCycleChecked && !noneCycleChecked;
+
+  // Set indeterminate state on the master checkbox
+  useEffect(() => {
+    if (masterCycleRef.current) {
+      masterCycleRef.current.indeterminate = isCycleIndeterminate;
+    }
+  }, [isCycleIndeterminate]);
+
+  const handleMasterCycleChange = () => {
+    // If all checked or indeterminate, uncheck all; if none checked, check all
+    setAllPatternsIncludeInCycle(!allCycleChecked);
+  };
 
   const playbackMode = currentSet.playbackMode ?? 'loop';  // Default to loop for existing data
-  const isPlaying = playback.isPlaying;
-
-  const handleFillClick = () => {
-    if (isPlaying) {
-      onTriggerFill();
-    }
-  };
+  const isLoopMode = playbackMode === 'loop';
 
   const MODE_OPTIONS: Array<{ value: PlaybackMode; label: string; tooltip: string }> = [
     { value: 'loop', label: 'Loop', tooltip: 'Repeat the selected pattern continuously' },
@@ -71,27 +85,8 @@ export function PatternArea({ onTriggerFill }: PatternAreaProps) {
             Patterns ({currentSet.patterns.length})
           </h2>
 
-          {/* Fill Controls + Loop/Cycle Mode Selector */}
+          {/* Fill on Switch + Loop/Cycle Mode Selector */}
           <div className="flex items-center gap-3">
-            {/* Fill Button */}
-            <button
-              onClick={handleFillClick}
-              disabled={!isPlaying}
-              className={`
-                px-4 py-1 text-xs font-medium rounded
-                focus:outline-none focus:ring-2 focus:ring-orange-500
-                transition-colors
-                ${isPlaying
-                  ? 'bg-orange-600 hover:bg-orange-700 text-white'
-                  : 'bg-gray-700 text-gray-500 cursor-not-allowed'
-                }
-              `}
-              aria-label={isPlaying ? 'Trigger drum fill' : 'Play first to trigger fills'}
-              title={isPlaying ? 'Trigger fill (or click active pattern pad)' : 'Play first to trigger fills'}
-            >
-              Fill
-            </button>
-
             {/* Fill on Switch Checkbox */}
             <label className="flex items-center gap-1.5 text-xs text-gray-400 cursor-pointer hover:text-white transition-colors">
               <input
@@ -131,8 +126,45 @@ export function PatternArea({ onTriggerFill }: PatternAreaProps) {
           </div>
         </div>
 
+        {/* Column Headers */}
+        <div className="flex items-end gap-2 px-2 -mx-2 text-xs text-gray-500">
+          {/* Spacer for drag handle */}
+          <div className="flex-shrink-0 w-3 -ml-2 -mr-1" aria-hidden="true" />
+          {/* Spacer for pattern pad */}
+          <div className="w-14 sm:w-16 flex-shrink-0" aria-hidden="true" />
+          {/* Spacer for pattern input */}
+          <div className="flex-1" aria-hidden="true" />
+          {/* Cycle header with master checkbox */}
+          <div className="flex-shrink-0 flex items-center justify-center gap-1.5">
+            <input
+              ref={masterCycleRef}
+              type="checkbox"
+              checked={allCycleChecked}
+              onChange={handleMasterCycleChange}
+              className={`
+                w-4 h-4 rounded cursor-pointer
+                transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500
+                ${isLoopMode
+                  ? 'border-gray-700 text-gray-600'
+                  : 'border-gray-600 text-blue-600'
+                }
+                bg-gray-800 border-2
+              `}
+              aria-label="Toggle all patterns in cycle"
+              title={allCycleChecked ? 'Uncheck all patterns from cycle' : 'Include all patterns in cycle'}
+            />
+            <span className={isLoopMode ? 'text-gray-600' : 'text-gray-500'}>Cycle</span>
+          </div>
+          {/* Repeat header */}
+          <div className="flex-shrink-0 w-[104px] text-center">
+            <span className={isLoopMode ? 'text-gray-600' : 'text-gray-500'}>Repeat</span>
+          </div>
+          {/* Spacer for remove button */}
+          <div className="w-9 flex-shrink-0" aria-hidden="true" />
+        </div>
+
         {/* Pattern Rows */}
-        <div className="space-y-4">
+        <div className="space-y-2">
           {currentSet.patterns.map((pattern, index) => (
             <PatternRow
               key={pattern.id}
@@ -156,7 +188,7 @@ export function PatternArea({ onTriggerFill }: PatternAreaProps) {
           <button
             onClick={handleAddPattern}
             className="
-              w-12 h-12 sm:w-14 sm:h-14 rounded-lg font-bold text-2xl
+              w-14 h-14 sm:w-16 sm:h-16 rounded-lg font-bold text-2xl
               border-2 border-dashed transition-all
               focus:outline-none focus:ring-2 focus:ring-blue-500
               flex-shrink-0

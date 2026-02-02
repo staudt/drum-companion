@@ -121,30 +121,30 @@ export function PatternRow({
       className={`flex items-end gap-2 p-2 -m-2 rounded-lg hover:bg-gray-800/50 transition-all ${
         isDragging ? 'opacity-50 scale-95' : ''
       } ${isDraggedOver ? 'border-t-2 border-blue-500' : ''}`}
-      draggable
-      onDragStart={() => onDragStart(index)}
       onDragOver={(e) => onDragOver(e, index)}
-      onDragEnd={onDragEnd}
       onDrop={onDrop}
     >
-      {/* Drag Handle */}
+      {/* Drag Handle - spans full row height, only this is draggable */}
       <div
-        className="flex-shrink-0 h-12 sm:h-14 flex items-center justify-center cursor-grab active:cursor-grabbing text-gray-600 hover:text-gray-400 transition-colors -ml-2 -mr-1"
+        className="flex-shrink-0 self-stretch flex items-center justify-center cursor-grab active:cursor-grabbing text-gray-600 hover:text-gray-400 transition-colors -ml-2 -mr-1 px-1"
         aria-label="Drag to reorder"
+        draggable
+        onDragStart={() => onDragStart(index)}
+        onDragEnd={onDragEnd}
       >
         <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 16 16">
           <path d="M5 3a1 1 0 1 1 0-2 1 1 0 0 1 0 2zm6 0a1 1 0 1 1 0-2 1 1 0 0 1 0 2zM5 9a1 1 0 1 1 0-2 1 1 0 0 1 0 2zm6 0a1 1 0 1 1 0-2 1 1 0 0 1 0 2zm-6 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2zm6 0a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"/>
         </svg>
       </div>
 
-      {/* Pattern Pad (Number Button) */}
+      {/* Pattern Pad (Number Button) - matches full row height */}
       <button
         onClick={handlePadClick}
         className={`
-          w-12 h-12 sm:w-14 sm:h-14 rounded-lg font-bold text-xl
+          w-14 h-[66px] sm:w-16 sm:h-[66px] rounded-lg font-bold text-2xl
           border-2 transition-all duration-200
           focus:outline-none focus:ring-2 focus:ring-blue-500
-          flex-shrink-0
+          flex-shrink-0 self-stretch
           ${getPadStyle()}
         `}
         aria-label={
@@ -180,115 +180,98 @@ export function PatternRow({
         />
       </div>
 
-      {/* Cycle Checkbox */}
-      <div className="flex-shrink-0">
-        <div className="flex items-end justify-center h-5 mb-1">
-          <label
-            htmlFor={`cycle-${patternId}`}
-            className={`text-xs transition-colors ${
-              isLoopMode ? 'text-gray-600' : 'text-gray-500'
-            }`}
-          >
-            Cycle
-          </label>
-        </div>
-        <div
+      {/* Cycle Checkbox - centered with pattern textbox */}
+      <div
+        className={`
+          flex-shrink-0 flex items-center justify-center px-2 mb-2
+          ${isLoopMode ? 'opacity-50' : 'opacity-100'}
+          transition-opacity
+        `}
+        title={
+          isLoopMode
+            ? 'Include this pattern when in Cycle mode'
+            : pattern.includeInCycle
+            ? 'This pattern is included in the cycle'
+            : 'This pattern is excluded from the cycle'
+        }
+      >
+        <input
+          type="checkbox"
+          id={`cycle-${patternId}`}
+          checked={pattern.includeInCycle ?? true}
+          onChange={handleToggleIncludeInCycle}
           className={`
-            flex items-center justify-center h-9 px-2 border-2 border-transparent
-            ${isLoopMode ? 'opacity-50' : 'opacity-100'}
-            transition-opacity
+            w-5 h-5 rounded cursor-pointer
+            transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500
+            ${isLoopMode
+              ? 'border-gray-700 text-gray-600'
+              : 'border-gray-600 text-blue-600'
+            }
+            bg-gray-800 border-2
           `}
-          title={
-            isLoopMode
-              ? 'Include this pattern when in Cycle mode'
-              : pattern.includeInCycle
-              ? 'This pattern is included in the cycle'
-              : 'This pattern is excluded from the cycle'
-          }
-        >
-          <input
-            type="checkbox"
-            id={`cycle-${patternId}`}
-            checked={pattern.includeInCycle ?? true}
-            onChange={handleToggleIncludeInCycle}
-            className={`
-              w-5 h-5 rounded cursor-pointer
-              transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500
-              ${isLoopMode
-                ? 'border-gray-700 text-gray-600'
-                : 'border-gray-600 text-blue-600'
-              }
-              bg-gray-800 border-2
-            `}
-            aria-label={`Include pattern ${patternId} in cycle mode`}
-          />
-        </div>
+          aria-label={`Include pattern ${patternId} in cycle mode`}
+        />
       </div>
 
       {/* Repeat Input with custom +/- buttons */}
-      <div className="flex-shrink-0">
-        <div className="flex items-end justify-center h-5 mb-1">
-          <label className="text-xs text-gray-500">Repeat</label>
-        </div>
-        <div
+      <div
+        className={`
+          flex-shrink-0 flex items-center rounded border-2 overflow-hidden
+          ${isLoopMode ? 'border-gray-700' : 'border-gray-600'}
+        `}
+        title={isLoopMode
+          ? 'Repeat count is ignored in Loop mode (but you can still edit it for Cycle mode)'
+          : 'Number of times to play this pattern before moving to next'
+        }
+      >
+        <button
+          onClick={decrementRepeat}
+          disabled={(pattern.repeat ?? 2) <= 1}
           className={`
-            flex items-center rounded border-2 overflow-hidden
-            ${isLoopMode ? 'border-gray-700' : 'border-gray-600'}
+            w-8 h-9 flex items-center justify-center text-lg font-bold
+            transition-colors focus:outline-none
+            ${isLoopMode
+              ? 'bg-gray-800 text-gray-600 hover:bg-gray-750 hover:text-gray-500'
+              : 'bg-gray-700 text-gray-300 hover:bg-gray-600 hover:text-white'
+            }
+            ${(pattern.repeat ?? 2) <= 1 ? 'cursor-not-allowed opacity-50' : ''}
           `}
-          title={isLoopMode
-            ? 'Repeat count is ignored in Loop mode (but you can still edit it for Cycle mode)'
-            : 'Number of times to play this pattern before moving to next'
-          }
+          aria-label="Decrease repeat count"
         >
-          <button
-            onClick={decrementRepeat}
-            disabled={(pattern.repeat ?? 2) <= 1}
-            className={`
-              w-8 h-9 flex items-center justify-center text-lg font-bold
-              transition-colors focus:outline-none
-              ${isLoopMode
-                ? 'bg-gray-800 text-gray-600 hover:bg-gray-750 hover:text-gray-500'
-                : 'bg-gray-700 text-gray-300 hover:bg-gray-600 hover:text-white'
-              }
-              ${(pattern.repeat ?? 2) <= 1 ? 'cursor-not-allowed opacity-50' : ''}
-            `}
-            aria-label="Decrease repeat count"
-          >
-            −
-          </button>
-          <input
-            type="number"
-            min={1}
-            max={99}
-            value={pattern.repeat ?? 2}
-            onChange={handleRepeatChange}
-            className={`
-              w-10 h-9 font-mono text-sm text-center border-0
-              focus:outline-none focus:ring-0
-              [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none
-              ${isLoopMode
-                ? 'bg-gray-800 text-gray-500'
-                : 'bg-gray-800 text-white'
-              }
-            `}
-          />
-          <button
-            onClick={incrementRepeat}
-            disabled={(pattern.repeat ?? 2) >= 99}
-            className={`
-              w-8 h-9 flex items-center justify-center text-lg font-bold
-              transition-colors focus:outline-none
-              ${isLoopMode
-                ? 'bg-gray-800 text-gray-600 hover:bg-gray-750 hover:text-gray-500'
-                : 'bg-gray-700 text-gray-300 hover:bg-gray-600 hover:text-white'
-              }
-              ${(pattern.repeat ?? 2) >= 99 ? 'cursor-not-allowed opacity-50' : ''}
-            `}
-            aria-label="Increase repeat count"
-          >
-            +
-          </button>
-        </div>
+          −
+        </button>
+        <input
+          type="number"
+          min={1}
+          max={99}
+          value={pattern.repeat ?? 2}
+          onChange={handleRepeatChange}
+          className={`
+            w-10 h-9 font-mono text-sm text-center border-0
+            focus:outline-none focus:ring-0
+            [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none
+            ${isLoopMode
+              ? 'bg-gray-800 text-gray-500'
+              : 'bg-gray-800 text-white'
+            }
+          `}
+        />
+        <button
+          onClick={incrementRepeat}
+          disabled={(pattern.repeat ?? 2) >= 99}
+          className={`
+            w-8 h-9 flex items-center justify-center text-lg font-bold
+            transition-colors focus:outline-none
+            ${isLoopMode
+              ? 'bg-gray-800 text-gray-600 hover:bg-gray-750 hover:text-gray-500'
+              : 'bg-gray-700 text-gray-300 hover:bg-gray-600 hover:text-white'
+            }
+            ${(pattern.repeat ?? 2) >= 99 ? 'cursor-not-allowed opacity-50' : ''}
+          `}
+          aria-label="Increase repeat count"
+        >
+          +
+        </button>
       </div>
 
       {/* Remove Button - aligned with pattern text box */}

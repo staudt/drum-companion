@@ -19,36 +19,6 @@ export function Sidebar() {
 
   return (
     <>
-      {/* Mobile Hamburger Button */}
-      <button
-        onClick={toggleSidebar}
-        className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-gray-800 rounded-lg shadow-lg
-          hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
-        aria-label="Toggle sidebar"
-      >
-        <svg
-          className="w-6 h-6 text-white"
-          fill="none"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth="2"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          {ui.sidebarOpen ? (
-            // X icon when open
-            <>
-              <path d="M6 18L18 6M6 6l12 12" />
-            </>
-          ) : (
-            // Hamburger icon when closed
-            <>
-              <path d="M4 6h16M4 12h16M4 18h16" />
-            </>
-          )}
-        </svg>
-      </button>
-
       {/* Backdrop (mobile only, when open) */}
       {ui.sidebarOpen && (
         <div
